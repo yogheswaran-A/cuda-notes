@@ -1,0 +1,896 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Getting Started: Cuda C++ &#8212; Cuda C++: Crawling, Walking and Running</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '01-getting-started';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Cuda C++: Crawling, Walking And Running" href="00-landing-page.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="00-landing-page.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Cuda C++: Crawling, Walking and Running</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="00-landing-page.html">
+                    Cuda C++: Crawling, Walking And Running
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Getting Started: Cuda C++</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/yogheswaran-a/cudanotes" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/yogheswaran-a/cudanotes/issues/new?title=Issue%20on%20page%20%2F01-getting-started.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/01-getting-started.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Getting Started: Cuda C++</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gpu-intro">GPU Intro</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#transfer-of-data-from-cpu-to-gpu">Transfer Of Data from CPU to GPU.</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gpu-kernels">GPU Kernels</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#streaming-multiprocessor-and-gpu-features">Streaming Multiprocessor and GPU features</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-are-threads-blocks-and-grids">What are Threads, Blocks and Grids?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-our-first-program">Writing our first program</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cuda-error-checking">Cuda Error Checking</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#putting-it-all-together-vector-addition">Putting it all together: Vector Addition</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contribute">Contribute</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="getting-started-cuda-c">
+<h1>Getting Started: Cuda C++<a class="headerlink" href="#getting-started-cuda-c" title="Link to this heading">#</a></h1>
+<p>This chapter comprises of:</p>
+<ol class="arabic simple">
+<li><p>GPU Intro.</p></li>
+<li><p>Transfer Of Data From CPU to GPU.</p></li>
+<li><p>GPU Kernels.</p></li>
+<li><p>Streaming Multiprocessor and GPU features.</p></li>
+<li><p>What are Threads, Blocks and Grids?</p></li>
+<li><p>Writing our first program.</p></li>
+<li><p>Cuda Error Checking.</p></li>
+<li><p>Putting it all together: Vector Addition.</p></li>
+</ol>
+<section id="gpu-intro">
+<h2>GPU Intro<a class="headerlink" href="#gpu-intro" title="Link to this heading">#</a></h2>
+<p>When a C++ program complied, the program is converted into machine code which can be executed on the CPU. When a program is written for CPU the machine code is excecuted sequentially inside a core. If there are multiple cores present then each core can be used to perform the desired operation parallely(using OpenMp in C++) but the instructions inside each core will be exceuted sequentially.</p>
+<p>Say if we want to add a vector A to vector B and assume only one core is present. Then each dim of A and B will be added sequentially.<br />
+For example say vector A,B are 1x5.<br />
+A = [1,  2, 3, 4, 5]<br />
+B = [11,12,13,14,15]</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Vector addition </span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span> <span class="n">A</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">};</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span> <span class="n">B</span><span class="p">{</span><span class="mi">11</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">15</span><span class="p">};</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span> <span class="n">C</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
+
+<span class="k">for</span><span class="p">(</span><span class="nb">int</span> <span class="n">i</span><span class="o">=</span> <span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="n">A</span><span class="o">.</span><span class="n">size</span><span class="p">();</span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">];</span> <span class="o">//</span> <span class="n">sequential</span> <span class="n">operation</span>
+
+</pre></div>
+</div>
+<p>Let’s say the CPU takes t_cpu_add seconds to load the data into registers, add them, etc.<br />
+The CPU will perform the addition of zeroth index first: 1 + 11 = 12 in 1*t_cpu_add sec, then the addition of first index: 2 + 12 = 14 in 2*t_cpu_add secs and so on sequentially.<br />
+In total it will take 5*t_cpu_add seconds. As you may have noted the addition in each index is independent of other indexes, so what if we want to do this operation at one clock cycle ie t_cpu_add seconds. This is where GPU is useful, it can perform the vector addition at a go(like boooom), that is parallely in 1*t_gpu_add seconds. This is why GPUs are used, for parallel computing.
+Note that t_cpu_add may be less than t_gpu_add, but when the dimensions of vectors are really large say 100,000, then 1*t_gpu_add will be far less than 100,000*t_cpu_add.</p>
+<p><img alt="img" src="_images/gpu_cpu_sequential_parallel.png" /></p>
+<p><em>Cuda machine code is called SASS(streaming assembler). SASS is the opcode which is executed on the machine. PTX like a assembely language, Cuda C++/C is converted to PTX and then it is translated to into machine code which can be executed on the GPU.</em></p>
+</section>
+<section id="transfer-of-data-from-cpu-to-gpu">
+<h2>Transfer Of Data from CPU to GPU.<a class="headerlink" href="#transfer-of-data-from-cpu-to-gpu" title="Link to this heading">#</a></h2>
+<p>Let’s dive straight into how to perform vector addtion with a GPU. For this we need to load the data into the GPU first to perform any operations. GPU and CPU work together. We call the CPU as <em>Host</em> and the GPU as <em>Device</em>.</p>
+<p>Just like we initialize memory in C++ program for CPU, we need to initialize memory in GPU.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">//</span> <span class="n">Memory</span> <span class="n">allocation</span> <span class="ow">in</span> <span class="n">C</span><span class="o">++</span>
+
+<span class="nb">float</span> <span class="o">*</span><span class="n">h_A</span><span class="p">;</span> <span class="o">//</span><span class="n">h_</span> <span class="n">to</span> <span class="n">represent</span> <span class="n">host</span>
+<span class="nb">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="n">h_A</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span> <span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">));</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">//</span> <span class="n">Memory</span> <span class="n">allocation</span> <span class="ow">in</span> <span class="n">Cuda</span> <span class="n">C</span><span class="o">++</span>
+
+<span class="nb">float</span> <span class="o">*</span><span class="n">d_A</span><span class="p">;</span>
+<span class="nb">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="n">CudaMalloc</span><span class="p">((</span><span class="n">void</span> <span class="o">**</span><span class="p">)</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span><span class="n">n</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">));</span>
+</pre></div>
+</div>
+<p><strong>CudaMalloc()</strong> is used to allocate memory(in global memory, more about this) in the GPU. It is very similar to <em>malloc()</em>. Notice here that we send the address of d_A. <em>I am guessing here, whatever memory is allocated in GPU its address is stored in d_A, hence we are passing the addres of d_A, so that in this address(d_A) we could store the address of GPU allocated memory’s address.</em><br />
+Now lets transfer some data from host to device, that is from CPU to GPU here. This is done by using <strong>cudaMemcpy()</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">float</span> <span class="o">*</span><span class="n">h_A</span><span class="p">;</span> <span class="o">//</span><span class="n">Represents</span> <span class="n">the</span> <span class="n">memory</span> <span class="ow">in</span> <span class="n">host</span><span class="p">(</span><span class="n">CPU</span><span class="p">)</span>
+<span class="nb">float</span> <span class="o">*</span><span class="n">d_A</span><span class="p">;</span> <span class="o">//</span><span class="n">Represents</span> <span class="n">the</span> <span class="n">memory</span> <span class="ow">in</span> <span class="n">device</span><span class="p">(</span><span class="n">GPU</span><span class="p">)</span>
+<span class="nb">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+<span class="n">h_A</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span> <span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">));</span> <span class="o">//</span> <span class="n">host</span> <span class="n">memory</span> <span class="n">allocation</span>
+<span class="n">CudaMalloc</span><span class="p">((</span><span class="n">void</span> <span class="o">**</span><span class="p">)</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span><span class="n">n</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">));</span> <span class="o">//</span><span class="n">GPU</span> <span class="n">memory</span> <span class="n">allocation</span>
+
+<span class="k">for</span><span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="n">h_A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
+
+<span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span> <span class="n">h_A</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">cudaMemcpyHostToDevice</span><span class="p">);</span> <span class="o">//</span> <span class="n">transfer</span> <span class="n">the</span> <span class="n">data</span> <span class="kn">from</span> <span class="nn">CPU</span> <span class="n">to</span> <span class="n">GPU</span><span class="o">.</span>
+<span class="o">//</span> <span class="n">the</span> <span class="n">first</span> <span class="n">parameter</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">pointer</span> <span class="n">to</span> <span class="n">which</span> <span class="n">the</span> <span class="n">data</span> <span class="ow">is</span> <span class="n">to</span> <span class="n">be</span> <span class="n">transfererd</span><span class="o">.</span>
+<span class="o">//</span> <span class="n">the</span> <span class="n">second</span> <span class="n">parameter</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">pointer</span> <span class="n">to</span> <span class="kn">from</span> <span class="nn">which</span> <span class="n">the</span> <span class="n">data</span> <span class="ow">is</span> <span class="n">to</span> <span class="n">be</span> <span class="n">transfererd</span><span class="o">.</span>
+<span class="o">//</span> <span class="n">the</span> <span class="n">amount</span> <span class="n">of</span> <span class="nb">bytes</span> <span class="n">to</span> <span class="n">be</span> <span class="n">transfered</span><span class="o">.</span>
+<span class="o">//</span> <span class="n">cudaMemcpyHostToDevice</span> <span class="k">for</span> <span class="n">Host</span> <span class="n">to</span> <span class="n">device</span> <span class="n">data</span> <span class="n">transfer</span>
+<span class="o">//</span> <span class="n">cudaMemcpyDeviceToHost</span> <span class="k">for</span> <span class="n">device</span> <span class="n">to</span> <span class="n">host</span> <span class="n">data</span> <span class="n">transfer</span>
+
+<span class="n">free</span><span class="p">(</span><span class="n">h_A</span><span class="p">);</span>
+<span class="n">cudaFree</span><span class="p">(</span><span class="n">d_A</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Note here that we have used <em>cudaFree()</em> to free the memory in the GPU. It is very similar to <em>free()</em> in C++ for CPU.</p>
+<p>The below pic gives an idea of what happens when CudaMemcpy() is called.</p>
+<p><img alt="img" src="_images/cpu_to_gpu_data_transfer.png" /></p>
+<p>The data is transfered from the RAM of CPU to the DRAM of GPU. The DRAM of GPU is also called as global memory. This transfer of data is slow around 5-7 GB/s, so in terms of processing time, this is a costly operation.</p>
+<p>How to copy data from device(GPU) to host(CPU) after we have performed some operations and we want the result in the CPU to display it? You guessed it right! using <strong>cudaMemcpy()</strong> but the third parameter is changed to cudaMemcpyDeviceToHost.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">h_A</span><span class="p">,</span> <span class="n">d_A</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">cudaMemcpyHostToDevice</span><span class="p">);</span> <span class="o">//</span> <span class="n">transfer</span> <span class="n">the</span> <span class="n">data</span> <span class="kn">from</span> <span class="nn">GPU</span> <span class="n">to</span> <span class="n">CPU</span><span class="o">.</span>
+</pre></div>
+</div>
+</section>
+<section id="gpu-kernels">
+<h2>GPU Kernels<a class="headerlink" href="#gpu-kernels" title="Link to this heading">#</a></h2>
+<p>Now we know how to transfer the data to the GPU. Lets see how to call a GPU to perform the desired operations on this data.
+To understand the GPU operations, it would helpful to think of a GPU consisting of many number of cores(this is not entirely true but for now it will help us to visulize. Will come back to this soon).
+So instructions like add etc can be done on these cores parallely.<br />
+To make use of these cores we need to write special functions called <em>kernel functions</em>. Whatever code is written iniside these <em>kernel functions</em> are executed on the GPU.
+This is the syntax of <em>kernel functions</em></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">__global__</span> <span class="n">void</span> <span class="n">function_name</span><span class="p">(</span><span class="n">arguments</span><span class="p">){</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The <em>__global__</em> indicates that the function runs on a GPU. The function call happens from the host code or other device code(when there are multiple GPUs present).<br />
+Now I wrote <em>host code</em> above, what does it mean? The Cuda program has two parts.</p>
+<ol class="arabic simple">
+<li><p>The code which is executed on CPU, are called host code. For example the main() function.</p></li>
+<li><p>The code which is executed on GPU, are caled device code. Any function which has the <em>__global__</em> before it.</p></li>
+</ol>
+<p>The Cuda compiler which is called <em>NVCC</em> separates the host code from device code. The host code is a normal C++ code, the device code are written inside these special functions mentioned before called <em>kernel functions</em>.</p>
+<p>The GPUs has many number of cores, how do we specify how many number of cores are needed for our program? We do this while making the kernel function call inside the host code.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">__global__</span> <span class="n">void</span> <span class="n">add_vectors</span><span class="p">(</span><span class="n">arguments</span><span class="p">){</span>
+    <span class="o">...</span> <span class="o">//</span><span class="n">some</span> <span class="n">code</span> <span class="n">to</span> <span class="n">add</span> <span class="n">numbers</span> 
+<span class="p">}</span>
+
+<span class="nb">int</span> <span class="n">main</span><span class="p">(){</span>
+    <span class="o">...</span> <span class="o">//</span> <span class="n">some</span> <span class="n">code</span> <span class="n">to</span> <span class="n">allocate</span> <span class="n">memory</span> <span class="ow">and</span> <span class="n">initiallize</span> <span class="n">the</span> <span class="n">vectors</span><span class="o">.</span>
+    
+    <span class="o">//</span> <span class="n">kernel</span> <span class="n">function</span> <span class="n">call</span>
+    <span class="n">add_vectors</span><span class="o">&lt;&lt;&lt;</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">arguments</span><span class="p">);</span> <span class="o">//</span> <span class="n">GPU</span> <span class="n">function</span> <span class="n">call</span><span class="p">,</span> <span class="n">calling</span> <span class="n">the</span> <span class="n">kernel</span> <span class="n">add_vectors</span><span class="p">()</span><span class="o">.</span>
+    <span class="o">..</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Explanation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">int</span> <span class="n">N</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="n">add_vectors</span><span class="o">&lt;&lt;&lt;</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">arguments</span><span class="p">);</span>
+
+<span class="n">The</span> <span class="n">triple</span> <span class="n">angle</span> <span class="n">brackets</span> <span class="n">call</span> <span class="n">the</span> <span class="n">device</span> <span class="n">code</span><span class="p">,</span> <span class="ow">in</span> <span class="n">this</span> <span class="n">case</span> <span class="n">it</span> <span class="n">calls</span> <span class="n">add_vectors</span><span class="p">()</span><span class="o">.</span> <span class="n">This</span> <span class="ow">is</span> <span class="n">called</span> <span class="n">kernel</span> <span class="n">launch</span><span class="o">.</span>
+<span class="n">The</span> <span class="n">parameters</span> <span class="n">inside</span> <span class="n">the</span> <span class="n">triple</span> <span class="n">angle</span> <span class="n">brackets</span> <span class="n">specify</span> <span class="n">how</span> <span class="n">many</span> <span class="n">cores</span> <span class="n">are</span> <span class="n">needed</span> <span class="k">for</span> <span class="n">our</span> <span class="n">program</span><span class="o">.</span> <span class="n">So</span> <span class="n">here</span> <span class="n">we</span> <span class="n">call</span> <span class="mi">1</span><span class="o">*</span><span class="n">N</span> <span class="n">cores</span> <span class="n">to</span> <span class="n">perform</span> <span class="n">the</span> <span class="n">vector</span> <span class="n">add</span> <span class="n">operation</span><span class="o">.</span>
+<span class="n">So</span> <span class="n">when</span> <span class="n">a</span> <span class="n">kernel</span> <span class="ow">is</span> <span class="n">launched</span><span class="p">,</span> <span class="ow">in</span> <span class="n">each</span> <span class="n">of</span> <span class="n">the</span> <span class="mi">1</span><span class="o">*</span><span class="n">N</span> <span class="n">cores</span> <span class="n">the</span> <span class="n">function</span> <span class="n">add_vectors</span><span class="p">()</span> <span class="n">will</span> <span class="n">execute</span> <span class="n">parallely</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>Combing the memory transfer and kernel launch.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">__global__</span> <span class="n">void</span> <span class="n">add_vectors</span><span class="p">(</span><span class="nb">int</span> <span class="o">*</span><span class="n">A</span><span class="p">,</span> <span class="nb">int</span> <span class="o">*</span><span class="n">B</span><span class="p">,</span> <span class="nb">int</span> <span class="o">*</span><span class="n">C</span><span class="p">,</span><span class="n">const</span> <span class="nb">int</span> <span class="n">n</span><span class="p">){</span>
+    <span class="o">//</span> <span class="n">some</span> <span class="n">code</span> <span class="n">to</span> <span class="n">add</span> <span class="n">the</span> <span class="n">vectors</span> <span class="n">A</span> <span class="ow">and</span> <span class="n">B</span> <span class="ow">and</span> <span class="n">store</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">C</span><span class="p">,</span> <span class="n">we</span> <span class="n">will</span> <span class="n">come</span> <span class="n">back</span> <span class="n">to</span> <span class="n">this</span><span class="o">.</span>
+    <span class="o">//</span> <span class="n">results</span> <span class="n">stored</span> <span class="ow">in</span> <span class="n">C</span>
+<span class="p">}</span>
+
+<span class="nb">int</span> <span class="n">main</span><span class="p">(){</span>
+
+<span class="nb">int</span> <span class="o">*</span><span class="n">h_A</span><span class="p">,</span> <span class="o">*</span><span class="n">h_B</span><span class="p">,</span> <span class="o">*</span><span class="n">h_C</span><span class="p">;</span><span class="o">//</span> <span class="n">h_A</span> <span class="ow">and</span> <span class="n">h_B</span> <span class="nb">input</span> <span class="n">vectors</span><span class="o">.</span> <span class="n">h_C</span> <span class="n">to</span> <span class="n">store</span> <span class="n">results</span><span class="o">.</span>
+<span class="nb">int</span> <span class="o">*</span><span class="n">d_A</span><span class="p">,</span> <span class="o">*</span><span class="n">d_B</span><span class="p">,</span> <span class="o">*</span><span class="n">d_C</span><span class="p">;</span><span class="o">//</span> <span class="n">For</span> <span class="n">GPU</span> <span class="n">memory</span> <span class="n">allocation</span><span class="o">.</span>
+
+<span class="n">const</span> <span class="nb">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="nb">int</span> <span class="n">size</span> <span class="o">=</span> <span class="n">n</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">int</span><span class="p">);</span>
+
+<span class="o">//</span> <span class="n">allocate</span> <span class="n">memory</span> <span class="ow">in</span> <span class="n">CPU</span> <span class="p">(</span><span class="n">host</span><span class="p">)</span>
+<span class="n">h_A</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="n">size</span><span class="p">);</span>
+<span class="n">h_B</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="n">size</span><span class="p">);</span>
+<span class="n">h_C</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="n">size</span><span class="p">);</span>
+
+<span class="o">//</span> <span class="n">allocate</span> <span class="n">memory</span> <span class="ow">in</span> <span class="n">GPU</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="n">cudaMalloc</span><span class="p">((</span><span class="n">void</span> <span class="o">**</span><span class="p">)</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+<span class="n">cudaMalloc</span><span class="p">((</span><span class="n">void</span> <span class="o">**</span><span class="p">)</span><span class="o">&amp;</span><span class="n">d_B</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+<span class="n">cudaMalloc</span><span class="p">((</span><span class="n">void</span> <span class="o">**</span><span class="p">)</span><span class="o">&amp;</span><span class="n">d_C</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+
+<span class="o">//</span> <span class="n">Copy</span> <span class="n">inputs</span> <span class="n">to</span> <span class="n">device</span>
+<span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span> <span class="n">h_A</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">cudaMemcpyHostToDevice</span><span class="p">);</span>
+<span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_B</span><span class="p">,</span> <span class="n">h_B</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">cudaMemcpyHostToDevice</span><span class="p">);</span>
+
+<span class="o">//</span> <span class="n">kernel</span> <span class="n">launch</span> <span class="k">with</span> <span class="n">n</span> <span class="n">number</span> <span class="n">of</span> <span class="n">cores</span><span class="o">.</span>
+<span class="n">add_vectors</span><span class="o">&lt;&lt;&lt;</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="n">d_B</span><span class="p">,</span><span class="n">d_C</span><span class="p">,</span><span class="n">n</span><span class="p">);</span>
+
+<span class="o">//</span> <span class="n">Note</span> <span class="n">above</span> <span class="n">that</span> <span class="n">we</span> <span class="n">are</span> <span class="n">passing</span> <span class="n">the</span> <span class="n">pointers</span> <span class="n">which</span> <span class="n">refer</span> <span class="n">to</span> <span class="n">the</span> <span class="n">memory</span> <span class="n">address</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">GPU</span><span class="o">.</span> <span class="n">So</span> <span class="n">it</span> <span class="ow">is</span> <span class="n">d_A</span><span class="p">,</span> <span class="n">d_B</span> <span class="ow">and</span> <span class="n">d_C</span><span class="o">.</span> 
+<span class="o">//</span> <span class="n">Passing</span> <span class="n">h_A</span><span class="p">,</span><span class="n">h_B</span><span class="p">,</span><span class="n">h_C</span> <span class="n">makes</span> <span class="n">no</span> <span class="n">sense</span> <span class="k">as</span> <span class="n">GPU</span> <span class="n">will</span> <span class="ow">not</span> <span class="n">have</span> <span class="n">access</span> <span class="n">to</span> <span class="n">the</span> <span class="n">memory</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">CPU</span><span class="o">.</span>
+
+<span class="o">//</span> <span class="n">d_C</span> <span class="n">will</span> <span class="n">store</span> <span class="n">the</span> <span class="n">result</span><span class="p">,</span> <span class="n">which</span> <span class="ow">is</span> <span class="ow">in</span> <span class="n">host</span><span class="p">(</span><span class="n">GPU</span><span class="p">)</span><span class="o">.</span> <span class="n">We</span> <span class="n">need</span> <span class="n">to</span> <span class="n">copy</span> <span class="n">it</span> <span class="n">to</span> <span class="n">CPU</span><span class="p">(</span><span class="n">device</span><span class="p">)</span><span class="o">.</span>
+<span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">h_C</span><span class="p">,</span> <span class="n">d_C</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">cudaMemcpyDeviceToHost</span><span class="p">);</span>
+
+<span class="o">//</span> <span class="n">Freeing</span> <span class="n">the</span> <span class="n">memory</span>
+<span class="n">free</span><span class="p">(</span><span class="n">h_A</span><span class="p">);</span> <span class="n">free</span><span class="p">(</span><span class="n">h_B</span><span class="p">);</span> <span class="n">free</span><span class="p">(</span><span class="n">h_C</span><span class="p">);</span>
+<span class="n">cudaFree</span><span class="p">(</span><span class="n">d_A</span><span class="p">);</span> <span class="n">cudaFree</span><span class="p">(</span><span class="n">d_B</span><span class="p">);</span> <span class="n">cudaFree</span><span class="p">(</span><span class="n">d_C</span><span class="p">);</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="streaming-multiprocessor-and-gpu-features">
+<h2>Streaming Multiprocessor and GPU features<a class="headerlink" href="#streaming-multiprocessor-and-gpu-features" title="Link to this heading">#</a></h2>
+<p>Till now we have asssumed that GPU consists of many cores. Lets take a dive into what this means.
+GPU consists of what are known as SM, streaming multiprocessor. SM’s are the building blocks of a GPU.<br />
+A SM has various components, which are:</p>
+<ol class="arabic simple">
+<li><p><strong>SP Units</strong>: Single Precision Floating Point units. These are used to perform 32-bit floating point operations like add, multiply, sub and divide. Its like an ALU but is less capable than the standard ALU.</p></li>
+<li><p><strong>DP Units</strong>: Double Precision Floating Point units. These are used to perform 64-bit floating point operations like add, multiply, sub and divide. Its like an ALU but is less capable than the standard ALU.</p></li>
+<li><p><strong>LD/ST units</strong>: Load/Store units. Whenever a operation like Add is to be performed the operands are loaded into registers called Load units. The results are stored in resgisters called Store units.
+Whenever a operation is performed by the GPU it first Loads it and then stores the result in the store units.</p></li>
+<li><p><strong>Wrap Scheduler</strong>: Wrap scheduler simply put is the one which issues the instructions to the SM. It tells which instructions needs to be executed and when.
+<em>Warp schedulers are dual issue capable</em>. This means that the wrap scheduler can issue two instructions to the same SM in the same clock, if the two instructions do not depend on each other.</p></li>
+<li><p><strong>cc INT8 units</strong>: Units to perform int8 operations.</p></li>
+<li><p><strong>FP16 units</strong>: 16-bit floating Point arithmetic units. From performance standpoint the speed of FP16 operations can be assumed to be twice the speed of SP operations.</p></li>
+<li><p><strong>Tensor core unit</strong>: <a class="reference external" href="https://www.nvidia.com/en-us/data-center/tensor-cores/">This NVIDIA article defines it better</a></p></li>
+<li><p>There are others <strong>BF16, FP8, INT8, FP6, FP4</strong> etc.</p></li>
+</ol>
+<p>The below will give you a better picture.</p>
+<p><img alt="img" src="_images/gpu_features1.png" /></p>
+<p><img alt="img" src="_images/gpu_features2.png" /></p>
+</section>
+<section id="what-are-threads-blocks-and-grids">
+<h2>What are Threads, Blocks and Grids?<a class="headerlink" href="#what-are-threads-blocks-and-grids" title="Link to this heading">#</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">int</span> <span class="n">N</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="n">add_vector</span><span class="o">&lt;&lt;&lt;</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">arguments</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Previously,we assumed 1*N was the number of cores. Which is in fact not true. It is in fact <em>total number of threads</em>, here the word <em>total</em> is important.</p>
+<p><strong>Threads</strong>: A thread represents the smallest unit of execution in a CUDA kernel. Each thread executes the kernel code independently and can be identified by its unique thread ID. Each SM has its feature as mentioned previously, thread can be viewed as an entity which executes an instruction(using the GPU features) dispachted by the wrap scheduler. Thread is the one which uses a DP unit or SP units or anything else inside a particukar SM.
+In the above code <em>N</em> represents the number of threads in a Block.</p>
+<p>What is a Block?<br />
+<strong>Block</strong>: A block is a group of threads. It is a collection of threads. A single SM executes one or more Block of threads.<br />
+In the above kernel launch(<em>add_vector&lt;&lt;&lt;1,N&gt;&gt;&gt;(arguments)</em>), <em>1</em> represents the number of blocks inside a Grid.</p>
+<p>What is a Grid?<br />
+<strong>Grid</strong>: A gourp of Blocks is called a Grid. It can be seen as a collection of SM.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Hierarchy</span>
+                <span class="n">Grids</span><span class="p">:</span> <span class="n">A</span> <span class="n">group</span> <span class="n">of</span> <span class="n">Blocks</span><span class="o">.</span> <span class="n">In</span> <span class="n">a</span> <span class="n">kernel</span> <span class="n">launch</span> <span class="n">there</span> <span class="ow">is</span> <span class="n">only</span> <span class="n">one</span> <span class="n">Grid</span><span class="o">.</span>
+                 <span class="o">||</span>
+                 \<span class="o">/</span>
+                <span class="n">Blocks</span><span class="p">:</span> <span class="n">A</span> <span class="n">group</span> <span class="n">of</span> <span class="n">Blocks</span> <span class="n">which</span> <span class="n">make</span> <span class="n">a</span> <span class="n">Grid</span><span class="o">.</span> <span class="n">A</span> <span class="n">block</span> <span class="ow">is</span> <span class="n">executed</span> <span class="n">on</span> <span class="n">a</span> <span class="n">SM</span><span class="o">.</span>
+                 <span class="o">||</span>
+                 \<span class="o">/</span>
+                <span class="n">Threads</span><span class="p">:</span> <span class="n">Smallest</span> <span class="n">entity</span><span class="p">,</span> <span class="n">a</span> <span class="n">gourp</span> <span class="n">of</span> <span class="n">Threads</span> <span class="n">which</span> <span class="n">make</span> <span class="n">a</span> <span class="n">Block</span><span class="o">.</span> <span class="n">A</span> <span class="n">thread</span> <span class="n">uses</span> <span class="n">the</span> <span class="n">features</span> <span class="n">of</span> <span class="n">SM</span><span class="p">(</span><span class="n">Tensor</span> <span class="n">cores</span><span class="p">,</span> <span class="n">DP</span> <span class="n">units</span> <span class="n">etc</span><span class="p">)</span> <span class="n">to</span> <span class="n">execute</span> <span class="n">an</span> <span class="n">instruction</span><span class="o">.</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Threads, Blocks and Grids are more of a software concepts, but is also loosely linked with hardware part of GPU.</p>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">int</span> <span class="n">threads_per_block</span> <span class="o">=</span> <span class="mi">32</span><span class="p">;</span>
+<span class="nb">int</span> <span class="n">blocks_per_grids</span> <span class="o">=</span> <span class="mi">64</span><span class="p">;</span>
+<span class="n">add_vector</span><span class="o">&lt;&lt;&lt;</span><span class="n">threads_per_block</span><span class="p">,</span><span class="n">blocks_per_grids</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">arguments</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>In the above, there is one Grid(in a kernel launch there is always only one grid), which has <em>blocks_per_grids</em> number of blocks in it. Each Block has <em>threads_per_block</em> number of threads in it.</p>
+<p><strong>The Threads from a particular block can communicate with each other and share memory, but it cannot communicate nor share memory with threads belonging to another Block.</strong></p>
+<p>A figure to help us understand Grid, Block and Thread.<br />
+<img alt="img" src="_images/grids_blocks_threads.png" /><br />
+As the figure shows, a Grid can be viewed as a cube. It has 3 dimensions x,y and z. Each dimension of a grid is occupied by a group of blocks. A block can be viewed as a component of a Gird. A block also has 3 dimesnions. x,y and z. Each dimension of a block is occupied by a group of threads.</p>
+<p>But in the above code we did not specify 3 dimensions for number of blocks per thread and number of threads per block. It was just one. When only one number is specified by default it means x dimension. To specify blocks and threads in all three dimension we make use of <em>dim3</em> class.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dim3</span> <span class="n">blocks</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">);</span>     <span class="o">//</span> <span class="n">A</span> <span class="n">Grid</span> <span class="n">will</span> <span class="n">have</span> <span class="mi">1</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">x</span> <span class="n">dimension</span><span class="p">,</span> <span class="mi">2</span> <span class="n">blocks</span> <span class="ow">in</span> <span class="n">y</span> <span class="ow">and</span> <span class="mi">3</span> <span class="n">blocks</span> <span class="ow">in</span> <span class="n">z</span><span class="o">.</span> 
+<span class="n">dim3</span> <span class="n">threads</span><span class="p">(</span><span class="mi">11</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">);</span> <span class="o">//</span> <span class="n">A</span> <span class="n">block</span> <span class="n">will</span> <span class="n">have</span> <span class="mi">11</span> <span class="n">threads</span> <span class="ow">in</span> <span class="n">x</span> <span class="n">dimension</span><span class="p">,</span> <span class="mi">12</span> <span class="n">threads</span> <span class="ow">in</span> <span class="n">y</span> <span class="ow">and</span> <span class="mi">13</span> <span class="n">threads</span> <span class="ow">in</span> <span class="n">z</span> <span class="n">dimension</span><span class="o">.</span> 
+<span class="n">add_vector</span><span class="o">&lt;&lt;&lt;</span><span class="n">blocks</span><span class="p">,</span><span class="n">threads</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">arguments</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Now lets write our first cuda program.</p>
+</section>
+<section id="writing-our-first-program">
+<h2>Writing our first program<a class="headerlink" href="#writing-our-first-program" title="Link to this heading">#</a></h2>
+<p>Lets write a program to print the block co-ordinate within a grid and thread co-ordinate within a block. For this we need to know about the following:</p>
+<ol class="arabic simple">
+<li><p><strong>threadIdx.x</strong> : gives us the x co-ordinate of a thread within a block. Respectively threadIdx.y and threadIdx.z gives us y and z co-ordinate of a thread within a block.</p></li>
+<li><p><strong>blockIdx.x</strong>  : gives us the x co-ordinate of a block within a grid. Respectively blockIdx.y and blockIdx.z gives us y and z co-ordinate of a block within a grid.</p></li>
+<li><p><strong>gridDim.x</strong>   : gives the number of blocks in the x dimesnion of the grid. Respectively gridDim.y and gridDim.y gives us the number of blocks in y and z dimesnion of a grid.</p></li>
+<li><p><strong>blockDim.x</strong>   : gives the number of threads in the x dimesnion of the block. Respectively blockDim.y and blockDim.y gives us the number of threads in y and z dimesnion of a block.</p></li>
+</ol>
+<p>lets Launch a kernel of gird dim =(2,2), block dim = (2,2). Inside the kernel lets print the co-ordinate of the thread inside the block and co-ordinate of the block inside the grid.<br />
+I would request you to write the program by yourself first.</p>
+<p>The below is the program.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#include &lt;stdio.h&gt;</span>
+
+<span class="n">__global__</span> <span class="n">void</span> <span class="n">printcor</span><span class="p">(){</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;the grid dim is </span><span class="si">%d</span><span class="s2">,</span><span class="si">%d</span><span class="s2">.Blockdim is </span><span class="si">%d</span><span class="s2">,</span><span class="si">%d</span><span class="s2">. ThreadId and blockId are- thread x:</span><span class="si">%d</span><span class="s2">,thread y:</span><span class="si">%d</span><span class="s2">, block x:</span><span class="si">%d</span><span class="s2">,block y:</span><span class="si">%d</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">gridDim</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">gridDim</span><span class="o">.</span><span class="n">y</span><span class="p">,</span><span class="n">blockDim</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">blockDim</span><span class="o">.</span><span class="n">y</span><span class="p">,</span><span class="n">threadIdx</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">threadIdx</span><span class="o">.</span><span class="n">y</span><span class="p">,</span><span class="n">blockIdx</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">blockIdx</span><span class="o">.</span><span class="n">y</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nb">int</span> <span class="n">main</span><span class="p">(){</span>
+<span class="n">dim3</span> <span class="n">grid</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+<span class="n">dim3</span> <span class="n">block</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+<span class="n">printcor</span><span class="o">&lt;&lt;&lt;</span><span class="n">grid</span><span class="p">,</span><span class="n">block</span><span class="o">&gt;&gt;&gt;</span><span class="p">();</span>
+<span class="n">cudaDeviceSynchronize</span><span class="p">();</span> <span class="o">//</span> <span class="n">block</span> <span class="n">until</span> <span class="n">the</span> <span class="n">GPU</span> <span class="n">has</span> <span class="n">finished</span> <span class="n">its</span> <span class="n">work</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output of the above code is the below. Note that the threads in GPU might execute in any order, there will be nanosecond difference. So the output won’t be necessarily “thread x:0 thread y:0, block x:0,block y:0”.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span> 
+<span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span>
+<span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span>
+<span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span>
+<span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span>
+<span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span>
+<span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span>
+<span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span>
+<span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span>
+<span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span>
+<span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span>
+<span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span>
+<span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span>
+<span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span>
+<span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span>
+<span class="n">the</span> <span class="n">grid</span> <span class="n">dim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span><span class="n">Blockdim</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span><span class="mf">2.</span> <span class="n">ThreadId</span> <span class="ow">and</span> <span class="n">blockId</span> <span class="n">are</span><span class="o">-</span> <span class="n">thread</span> <span class="n">x</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="n">thread</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="n">block</span> <span class="n">x</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="n">block</span> <span class="n">y</span><span class="p">:</span><span class="mi">1</span>
+</pre></div>
+</div>
+<p>Observe that <em>cudaDeviceSynchronize()</em> function is used here. This is because if CPU finishs it’s work it won’t wait for the GPU to finish, we have to explicity command the CPU to wait. cudaDeviceSynchronize() helps us to do this.</p>
+</section>
+<section id="cuda-error-checking">
+<h2>Cuda Error Checking<a class="headerlink" href="#cuda-error-checking" title="Link to this heading">#</a></h2>
+<p>It is a good practice to see if any of the cuda operations are throwing an error. For that we use the below code.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">cuda_check</span><span class="p">(</span><span class="n">cudaError_t</span> <span class="n">error</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">file</span><span class="p">,</span> <span class="nb">int</span> <span class="n">line</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">error</span> <span class="o">!=</span> <span class="n">cudaSuccess</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;[CUDA ERROR] at file </span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">:</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span>
+               <span class="n">cudaGetErrorString</span><span class="p">(</span><span class="n">error</span><span class="p">));</span>
+        <span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">#define cudaCheck(err) (cuda_check(err, __FILE__, __LINE__))</span>
+
+<span class="nb">int</span> <span class="n">main</span><span class="p">(){</span>
+    <span class="o">....</span> <span class="o">//</span> <span class="n">some</span> <span class="n">code</span>
+    <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">((</span><span class="n">void</span> <span class="o">**</span><span class="p">)</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span> <span class="n">sizeof</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span><span class="o">*</span><span class="mi">10</span><span class="p">));</span> <span class="o">//</span><span class="n">checking</span> <span class="k">if</span> <span class="n">cuda</span> <span class="n">memory</span> <span class="n">allocation</span> <span class="ow">is</span> <span class="n">successful</span> <span class="ow">or</span> <span class="ow">not</span><span class="o">.</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="putting-it-all-together-vector-addition">
+<h2>Putting it all together: Vector Addition<a class="headerlink" href="#putting-it-all-together-vector-addition" title="Link to this heading">#</a></h2>
+<p>Let us add Vector A and B. Each thread in the kernel launch will perform the addition of only one index. So in total we will launch <em>N</em> threads, where <em>N</em> is the size of the array A and B.<br />
+How do we get the index the array inside the thread?<br />
+Let block 0 and its thread 0 be the index 0, block 0 and thread 1 be index 1, block 0 and thread 2 be index 2 and so on.</p>
+<p>For example, let N = 32. And Grid size be (4,0,0) and Block size be (8,0,0). In total we will have 32 threads covering <em>N</em>. Block 0 will cover array index from 0-7, block 1 will cover 8-15, block 2 will cover 16-23, block 3 will cover 23-31.<br />
+For the 5th thread in block two to have index 21, we will use blockIdx.x, threadIdx.x and blockDim.x.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">int</span> <span class="n">index</span> <span class="o">=</span> <span class="n">threadIdx</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">blockIdx</span><span class="o">.</span><span class="n">x</span> <span class="o">*</span> <span class="n">blockDim</span><span class="o">.</span><span class="n">x</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><img alt="img" src="_images/index1.png" /></p>
+<p><img alt="img" src="_images/index2.png" /></p>
+<p>Putting it all together</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#include &lt;stdio.h&gt;</span>
+
+<span class="n">__global__</span> <span class="n">void</span> <span class="n">add_vectors</span><span class="p">(</span><span class="nb">int</span> <span class="o">*</span><span class="n">A</span><span class="p">,</span> <span class="nb">int</span> <span class="o">*</span><span class="n">B</span><span class="p">,</span> <span class="nb">int</span> <span class="o">*</span><span class="n">C</span><span class="p">,</span><span class="n">const</span> <span class="nb">int</span> <span class="n">n</span><span class="p">){</span>
+    <span class="nb">int</span> <span class="n">index</span> <span class="o">=</span> <span class="n">threadIdx</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">blockIdx</span><span class="o">.</span><span class="n">x</span> <span class="o">*</span> <span class="n">blockDim</span><span class="o">.</span><span class="n">x</span><span class="p">;</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">index</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">)</span>
+        <span class="n">C</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">+</span> <span class="n">B</span><span class="p">[</span><span class="n">index</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="n">void</span> <span class="n">cuda_check</span><span class="p">(</span><span class="n">cudaError_t</span> <span class="n">error</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">file</span><span class="p">,</span> <span class="nb">int</span> <span class="n">line</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">error</span> <span class="o">!=</span> <span class="n">cudaSuccess</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;[CUDA ERROR] at file </span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">:</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span>
+               <span class="n">cudaGetErrorString</span><span class="p">(</span><span class="n">error</span><span class="p">));</span>
+        <span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="c1">#define cudaCheck(err) (cuda_check(err, __FILE__, __LINE__))</span>
+
+<span class="nb">int</span> <span class="n">main</span><span class="p">(){</span>
+
+<span class="nb">int</span> <span class="o">*</span><span class="n">h_A</span><span class="p">,</span> <span class="o">*</span><span class="n">h_B</span><span class="p">,</span> <span class="o">*</span><span class="n">h_C</span><span class="p">;</span><span class="o">//</span> <span class="n">h_A</span> <span class="ow">and</span> <span class="n">h_B</span> <span class="nb">input</span> <span class="n">vectors</span><span class="o">.</span> <span class="n">h_C</span> <span class="n">to</span> <span class="n">store</span> <span class="n">results</span><span class="o">.</span>
+<span class="nb">int</span> <span class="o">*</span><span class="n">d_A</span><span class="p">,</span> <span class="o">*</span><span class="n">d_B</span><span class="p">,</span> <span class="o">*</span><span class="n">d_C</span><span class="p">;</span><span class="o">//</span> <span class="n">For</span> <span class="n">GPU</span> <span class="n">memory</span> <span class="n">allocation</span><span class="o">.</span>
+
+<span class="n">const</span> <span class="nb">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">64</span><span class="p">;</span>
+<span class="nb">int</span> <span class="n">size</span> <span class="o">=</span> <span class="n">n</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">int</span><span class="p">);</span>
+
+<span class="o">//</span> <span class="n">allocate</span> <span class="n">memory</span> <span class="ow">in</span> <span class="n">CPU</span> <span class="p">(</span><span class="n">host</span><span class="p">)</span>
+<span class="n">h_A</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="n">size</span><span class="p">);</span>
+<span class="n">h_B</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="n">size</span><span class="p">);</span>
+<span class="n">h_C</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="n">size</span><span class="p">);</span>
+
+<span class="k">for</span><span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>  
+    <span class="p">{</span>
+        <span class="n">h_A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span> <span class="n">h_B</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span> <span class="o">+</span> <span class="n">i</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="o">//</span> <span class="n">allocate</span> <span class="n">memory</span> <span class="ow">in</span> <span class="n">GPU</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">((</span><span class="n">void</span> <span class="o">**</span><span class="p">)</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span> <span class="n">size</span><span class="p">));</span>
+<span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">((</span><span class="n">void</span> <span class="o">**</span><span class="p">)</span><span class="o">&amp;</span><span class="n">d_B</span><span class="p">,</span> <span class="n">size</span><span class="p">));</span>
+<span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">((</span><span class="n">void</span> <span class="o">**</span><span class="p">)</span><span class="o">&amp;</span><span class="n">d_C</span><span class="p">,</span> <span class="n">size</span><span class="p">));</span>
+
+<span class="o">//</span> <span class="n">Copy</span> <span class="n">inputs</span> <span class="n">to</span> <span class="n">device</span>
+<span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span> <span class="n">h_A</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">cudaMemcpyHostToDevice</span><span class="p">));</span>
+<span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_B</span><span class="p">,</span> <span class="n">h_B</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">cudaMemcpyHostToDevice</span><span class="p">));</span>
+
+<span class="nb">int</span> <span class="n">threads_per_block</span> <span class="o">=</span> <span class="mi">32</span><span class="p">;</span>
+
+<span class="o">//</span> <span class="n">kernel</span> <span class="n">launch</span>
+<span class="n">add_vectors</span><span class="o">&lt;&lt;&lt;</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">threads_per_block</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">threads_per_block</span><span class="p">,</span><span class="n">threads_per_block</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="n">d_B</span><span class="p">,</span><span class="n">d_C</span><span class="p">,</span><span class="n">n</span><span class="p">);</span>
+
+<span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaDeviceSynchronize</span><span class="p">());</span> <span class="o">//</span> <span class="n">wait</span> <span class="k">for</span> <span class="n">GPU</span>
+
+<span class="o">//</span> <span class="n">d_C</span> <span class="n">will</span> <span class="n">store</span> <span class="n">the</span> <span class="n">result</span><span class="p">,</span> <span class="n">which</span> <span class="ow">is</span> <span class="ow">in</span> <span class="n">host</span><span class="p">(</span><span class="n">GPU</span><span class="p">)</span><span class="o">.</span> <span class="n">We</span> <span class="n">need</span> <span class="n">to</span> <span class="n">copy</span> <span class="n">it</span> <span class="n">to</span> <span class="n">CPU</span><span class="p">(</span><span class="n">device</span><span class="p">)</span><span class="o">.</span>
+<span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">h_C</span><span class="p">,</span> <span class="n">d_C</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">cudaMemcpyDeviceToHost</span><span class="p">));</span>
+
+
+<span class="o">//</span><span class="n">printing</span> <span class="n">results</span>
+<span class="k">for</span><span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> + </span><span class="si">%d</span><span class="s2"> = </span><span class="si">%d</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">h_A</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">h_B</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="p">}</span>
+
+<span class="o">//</span> <span class="n">Freeing</span> <span class="n">memory</span>
+<span class="n">free</span><span class="p">(</span><span class="n">h_A</span><span class="p">);</span> <span class="n">free</span><span class="p">(</span><span class="n">h_B</span><span class="p">);</span> <span class="n">free</span><span class="p">(</span><span class="n">h_C</span><span class="p">);</span>
+<span class="n">cudaFree</span><span class="p">(</span><span class="n">d_A</span><span class="p">);</span> <span class="n">cudaFree</span><span class="p">(</span><span class="n">d_B</span><span class="p">);</span> <span class="n">cudaFree</span><span class="p">(</span><span class="n">d_C</span><span class="p">);</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In the next chapter we will learn more about different types of memories inside the GPU, which will help us understand <strong>Flash Attention</strong> later on.</p>
+</section>
+<section id="contribute">
+<h2>Contribute<a class="headerlink" href="#contribute" title="Link to this heading">#</a></h2>
+<p>If you find any mistakes, kindly raise an issue to correct it. I am working, if there is any delay in my response I apologise.<br />
+If you find this useful could you please give it a <a class="reference external" href="https://github.com/yogheswaran-a/cuda-notes/stargazers">star on GitHub</a> and share it with others. Thank you!<br />
+If you did not find this useful, sorry for wasting your time. The resources I have mentioned in my landing might help you learn.</p>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./."
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="00-landing-page.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Cuda C++: Crawling, Walking And Running</p>
+      </div>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gpu-intro">GPU Intro</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#transfer-of-data-from-cpu-to-gpu">Transfer Of Data from CPU to GPU.</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gpu-kernels">GPU Kernels</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#streaming-multiprocessor-and-gpu-features">Streaming Multiprocessor and GPU features</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-are-threads-blocks-and-grids">What are Threads, Blocks and Grids?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-our-first-program">Writing our first program</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cuda-error-checking">Cuda Error Checking</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#putting-it-all-together-vector-addition">Putting it all together: Vector Addition</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contribute">Contribute</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Yoghes and The Internet
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
