@@ -212,7 +212,9 @@ The below will give you a better picture.
 
 ![img](./data/img/01-intro/gpu_features1.png)  
 
-![img](./data/img/01-intro/gpu_features2.png)
+![img](./data/img/01-intro/gpu_features2.png)  
+
+![img](./data/img/01-intro/sm.png)
 
 
 ## What are Threads, Blocks and Grids?

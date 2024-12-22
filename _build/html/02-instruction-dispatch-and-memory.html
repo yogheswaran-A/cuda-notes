@@ -1,0 +1,900 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Instruction Dispatch and Memory &#8212; Cuda C++: Crawling, Walking and Running</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '02-instruction-dispatch-and-memory';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Getting Started: Cuda C++" href="01-getting-started.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="00-landing-page.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Cuda C++: Crawling, Walking and Running</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="00-landing-page.html">
+                    Cuda C++: Crawling, Walking And Running
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="01-getting-started.html">Getting Started: Cuda C++</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Instruction Dispatch and Memory</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/yogheswaran-a/cudanotes" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/yogheswaran-a/cudanotes/issues/new?title=Issue%20on%20page%20%2F02-instruction-dispatch-and-memory.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/02-instruction-dispatch-and-memory.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Instruction Dispatch and Memory</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wrap-and-wrap-scheduler">Wrap And Wrap Scheduler</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#types-of-memories">Types of Memories</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-coalesing-matters">Why coalesing matters?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#shared-memory">Shared Memory</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#more-about-shared-memory">More About Shared Memory</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="instruction-dispatch-and-memory">
+<h1>Instruction Dispatch and Memory<a class="headerlink" href="#instruction-dispatch-and-memory" title="Link to this heading">#</a></h1>
+<p>This chapter comprises of:</p>
+<ol class="arabic simple">
+<li><p>Wrap And Wrap Scheduler.</p></li>
+<li><p>Types of Memories.</p></li>
+<li><p>Why coalesing matters?</p></li>
+<li><p>Matirx Multiplication Using Shared Memory.</p></li>
+<li><p>More About Shared Memory.</p></li>
+</ol>
+<section id="wrap-and-wrap-scheduler">
+<h2>Wrap And Wrap Scheduler<a class="headerlink" href="#wrap-and-wrap-scheduler" title="Link to this heading">#</a></h2>
+<p>Hope you remember what Wrap scheduler is, it was defined in the previous chapter. Its defined here again,</p>
+<ol class="arabic simple">
+<li><p><strong>Wrap Scheduler</strong>: Wrap scheduler simply put is the one which issues the instructions to the SM. It tells which instructions needs to be executed and when. <em>Warp schedulers are dual issue capable</em>. This means that the wrap scheduler can issue two instructions to the same SM in the same clock, if the two instructions do not depend on each other.</p></li>
+</ol>
+<p>When the instructions are dispatched to the SM, inside the SM it is executed by the threads. One instruction dispatched by the scheduler is always executed by 32 threads. Meaning a single instruction is always executed by 32 threads, a group of 32 threads is called a wrap. If we launch a kernel with 14 threads <strong>add_vectors&lt;&lt;&lt;1,14&gt;&gt;&gt;(arguments)</strong>, then 32 threads(a wrap) will be used, extra threads will do the work but after execution the rest 18 threads will throw away the result. If we launch 36 threads <strong>add_vectors&lt;&lt;&lt;1,36&gt;&gt;&gt;(arguments)</strong>, then 64 threads(two wraps) will be used, extra threads will do the work but after execution the rest of the threads will throw away the result.<br />
+A <strong>threadblock</strong> is a <em>collection of warps (up to 32 of them)</em>. All of the threads in the same threadblock will run on the same SM. Multiple threadblocks may run on the same SM or may run on different SMs, the hardware attempts to balance the work among all available SMs.<br />
+<a class="reference external" href="https://www.reddit.com/r/CUDA/comments/x2f767/how_does_cuda_blockswarps_thread_works/">Refernce to the link from which the above sentence about the threadblock was taken from</a></p>
+</section>
+<section id="types-of-memories">
+<h2>Types of Memories<a class="headerlink" href="#types-of-memories" title="Link to this heading">#</a></h2>
+<p>For programming purpose it is majorly enough as far I have seen to know about these types of memory in the GPU:</p>
+<ol class="arabic simple">
+<li><p><strong>Global Memory</strong>: This like the DRAM. All the threads from all the SM’s have access to this memory. When a thread accesses this memory, the processing time is large. So this is a costly operation.</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">__global__</span> <span class="n">void</span> <span class="n">vector_add</span><span class="p">(</span><span class="nb">int</span> <span class="o">*</span><span class="n">A</span><span class="p">,</span><span class="nb">int</span> <span class="o">*</span><span class="n">B</span><span class="p">,</span><span class="nb">int</span> <span class="o">*</span><span class="n">C</span><span class="p">,</span><span class="nb">int</span> <span class="n">n</span><span class="p">){</span>
+    <span class="o">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The arrays A, B, and C are stored in the global memory. When a thread tries to access an element of one of these arrays, it reaches out to global memory which is a costly operation in terms of time consumed.</p>
+<ol class="arabic simple" start="2">
+<li><p><strong>L2 cache</strong>: This is cache memory available globaly to all the threads from all the SM. This is a cache used to speed up the reading of data from Global memory.The memory access takes less time than global memory.</p></li>
+<li><p><strong>L1 cache</strong>: This is a per thread block resource. The threads inside the same thread block share this memory. We don’t have control over what data is stored here, it like LRU. We cannot mannually modify the data stored here.The memory access takes less time than L2 cache.</p></li>
+<li><p><strong>Shared Memory</strong>: This is also a per thread block resource. The threads inside the same threadd block share this memory. We as a programmer can decide what data is stored here. We can read and modify this data. This is the fastest memory, but sadly it has very less storage capacity. Later we will see how to make use of this in Cuda C++.</p></li>
+</ol>
+<p>The difference between Shared memory and L1 cache is that L1 cache is a cache shared by the threads in a block. For example suppose we have launched a kernel with 3 blocks per grid and 32 threads per block.Assume A is an array stored in the global memory and none of the threads from block 0 have accessed this memory. In the block 0, suppose the thread 0 reads the global memory of say A[0], then this(A[0] data) will be stored in the L1 cache. In the next clock cycle say thread 2 of block 0(same block) wants to access the A[0], it does not have to go to the global memory because it is stored in the L1 cache. L1 is like a LRU for the threads from the same threadblock.</p>
+<p>Shared memory is a very limited memory allocated to the threads of the same thread blocks. Threads within a block can read and write into this. Assume for understanding this concept that we have kernel in which the threads from a block have to access A[0] in subsequent cycles and add 1 to it. This is what happens(All the thread mentioned below are from the same block).</p>
+<p><em>cycle 1</em>: Thread 0 tries to acccess A[0]. Since its the first time L1 does not have A[0], so A[0] is accessed from the global memory, the data is also stored in the L1 cache. Now Thread 0 adds 1 to it, since the data is modified the L1 cache is invalidated. Now thread 0 has to reach the global memory to store it.</p>
+<p><em>cycle 2</em>: Thread 1 tries to acccess A[0]. Since its L1 has invalid A[0] data, A[0] is accessed from the global memory, the data is again stored in the L1 cache. Now Thread 1 adds 1 to it, since the data is modified the L1 cache is invalidated. Now thread 0 has to reach the global memory to store it.</p>
+<p><em>cycle 3</em>: Thread 2 tries to acccess A[0]. Since its L1 has invalid A[0] data, A[0] is accessed from the global memory, the data is again stored in the L1 cache. Now Thread 2 adds 1 to it, since the data is modified the L1 cache is invalidated. Now thread 0 has to reach the global memory to store it.</p>
+<p>As you can see the global memory is accessed many times, which is a costly operation. This is where shared memory is useful, since we can manually decide what can be stored here and this memory is fast.</p>
+<p><em>cycle 1</em>: Thread 0 tries to acccess A[0]. Since its the first time L1 does not have A[0], so A[0] is accessed from the global memory, the data is also stored in the L1 cache. Now Thread 0 adds 1 to it, since the data is modified the L1 cache is invalidated. Now instead of storing the result in the global memory, since we know the other threads will use this, we can store it manually(write code such a way) in the shared memory. So thread 0 stores it in a shared memory.</p>
+<p><em>cycle 2</em>: Thread 1 tries to acccess A[0]. Since its L1 has invalid A[0] data, A[0] is accessed from the shared memory. Now Thread 1 adds 1 to it, stores it in the shared memory.</p>
+<p><em>cycle 3</em>: Thread 2 tries to acccess A[0]. The data is in shared memory, thread 2 reads from it. Now Thread 2 adds 1 to it, stores it in the shared memory.</p>
+<p><strong>Little bit about L1, L2 and global memory working</strong><br />
+Suppose we launch a kernel with 32 threads and 2 thread blocks. Initially L1 and L2 caches are clear. Suppose Thread 0 from block 0 access A[0] from global memory. Since L2 does not have it, the data will be stored in L2 and in L1(L1 of the thread block 0). If in the next cycle if thread 0 from block 1 accesses A[0] since it is present in the L2 cache it will read from it and also cache the data in the L1 cache of its thread block.</p>
+<p>Figure depicting the different types of Memories. Please note that the numbers provided in th fig below are only to give an idea about the realtive memory capacity and speed.
+<img alt="img" src="_images/memory_heri.jpg" /></p>
+</section>
+<section id="why-coalesing-matters">
+<h2>Why coalesing matters?<a class="headerlink" href="#why-coalesing-matters" title="Link to this heading">#</a></h2>
+<p>Remember that a instruction is issued wrap wide(32 threads).A single Memory access intruction will also be issued for 32 threads at once. Assume that there are two thread block, and 32 threads per block. The Address bus for accessing the global memomry is 128 bytes wide. The global memory is from 0-512 bytes. Lastly assume that the address bus takes 1 clock cycle to transfer the data.</p>
+<ol class="arabic simple">
+<li><p>*Scenario one: *<br />
+Each Thread in block zero wants to access 4 bytes of contigious memory from 0-127 bytes. Threads need not access it orderly, it can be like this, thread 0 accesing 2-5 bytes, thread 1 accessing 0-1 and 6-7 bytes etc, but 32 threads together access 0-127 bytes. In this case since 0-127 bytes are contigious it will fit in the address bus. So total time will be 1 clock cycle. Total bytes transferred 128, out of which asll 128 bytes are used. Bus utilization = 128/128*100 = 100%</p></li>
+</ol>
+<p><img alt="img" src="_images/scenario1.png" /></p>
+<ol class="arabic simple" start="2">
+<li><p><em>Scenario two:</em><br />
+Each Thread in block zero wants to access the same 4 bytes of memory from 0-3 bytes. In this case since 0-4 bytes are contigious it will fit in the address bus. SO total time will be 1 clock cycle. But the address bus utiliazation is not full since only 4 bytes of useful data is fetched by the 128 bytes address bus. So bus utiliazation = 4/128*100 = 3.125%.</p></li>
+</ol>
+<p><img alt="img" src="_images/scenario2.png" /></p>
+<ol class="arabic simple" start="3">
+<li><p><em>Scenario three:</em><br />
+Each Thread in block zero wants to access 4 bytes of contigious memory from 96-223 bytes. In this case since 96-127 fall under one bus, 127-224 fall under another. So we need two cycles for the bus to transfer the data.. SO total time will be 2 clock cycle. Total bytes transferred 128*2 = 256, out of which only 128 bytes are used(223-96+1). Bus utilization = 128/256*100 = 50%.</p></li>
+</ol>
+<p><img alt="img" src="_images/scenario3.png" /></p>
+<ol class="arabic simple" start="4">
+<li><p><em>Scenario four:</em><br />
+32 Threads in block 0, accesses 96-233 bytes in first. To do this it will take 2 cycles. Now 32 threads in Block 1,accesses 0-96 bytes. Remember the L2 cache, since threads in block one already accessed 0-127 and 128-255 bytes of memory, this data will be present in L2 cache. If we consider overall the bus utilization will be 100% and the total time taken will be litte over 2 clock cycles.</p></li>
+</ol>
+<p><img alt="img" src="_images/scenario4.png" /></p>
+<ol class="arabic simple" start="5">
+<li><p><em>Scenario five:</em><br />
+32 Threads from block 0 access 128 bytes spread across 0-512 bytes.For example<br />
+Threads 0  -  8: access 0   - 31 bytes,
+Threads 8  - 16: access 128 - 159 bytes,
+Threads 17 - 23: access 256 - 287 bytes,
+Threads 24 - 31: access 480 - 511 bytes.<br />
+In this scenario we get bus utilization of 4%. And total time taken is 4 clock cycles.</p></li>
+</ol>
+<p>Scenario 5 is why coalesing matters. A warp should access within a contiguous region, ie consecutive threads accessing consecutive memory addresses.</p>
+<p><strong>Some optimization tips to achieve maximum efficiency.</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">1</span><span class="p">)</span> <span class="n">Strive</span> <span class="k">for</span> <span class="n">perfect</span> <span class="n">coalescing</span>
+    <span class="p">(</span><span class="n">Align</span> <span class="n">starting</span> <span class="n">address</span> <span class="o">-</span> <span class="n">may</span> <span class="n">require</span> <span class="n">padding</span><span class="p">)</span>    
+    <span class="n">A</span> <span class="n">warp</span> <span class="n">should</span> <span class="n">access</span> <span class="n">within</span> <span class="n">a</span> <span class="n">contiguous</span> <span class="n">region</span><span class="o">.</span>  
+<span class="mi">2</span><span class="p">)</span> <span class="n">Have</span> <span class="n">enough</span> <span class="n">concurrent</span> <span class="n">accesses</span> <span class="n">to</span> <span class="n">saturate</span> <span class="n">the</span> <span class="n">bus</span>  
+    <span class="n">Process</span> <span class="n">several</span> <span class="n">elements</span> <span class="n">per</span> <span class="n">thread</span><span class="o">.</span>    
+        <span class="n">Multiple</span> <span class="n">loads</span> <span class="n">get</span> <span class="n">pipelined</span><span class="o">.</span>
+        <span class="n">Indexing</span> <span class="n">calculations</span> <span class="n">can</span> <span class="n">often</span> <span class="n">be</span> <span class="n">reused</span><span class="o">.</span>  
+    <span class="n">Launch</span> <span class="n">enough</span> <span class="n">threads</span> <span class="n">to</span> <span class="n">maximize</span> <span class="n">throughput</span>  
+        <span class="n">Latency</span> <span class="ow">is</span> <span class="n">hidden</span> <span class="n">by</span> <span class="n">switching</span> <span class="n">threads</span><span class="p">:</span> <span class="n">By</span> <span class="n">making</span> <span class="n">sure</span> <span class="n">that</span> <span class="n">we</span> <span class="n">utilize</span> <span class="nb">all</span> <span class="n">the</span> <span class="n">threads</span> <span class="n">at</span> <span class="nb">any</span> <span class="n">given</span> <span class="n">point</span> <span class="n">we</span> <span class="n">can</span> <span class="n">avoid</span> <span class="nb">any</span> <span class="n">further</span> <span class="n">latency</span><span class="o">.</span>
+<span class="mi">3</span><span class="p">)</span> <span class="n">Use</span> <span class="nb">all</span> <span class="n">the</span> <span class="n">caches</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>The above points are taken from <a class="reference external" href="https://www.youtube.com/watch?v=Uz3r_OGQaxc">This Lecture</a>.</p>
+<p><strong>More info:</strong></p>
+<ol class="arabic simple">
+<li><p>During the time when a thread is executing memory read instruction, it can also execute other operations. SO basically a thread can request for a data and then go do some other work while the data is being loaded.</p></li>
+<li><p>Remeber that wrap scheduer is a dual issue. When the adjacent instructions are independent, scheduler may issue both these intructions to make sure that the threads stay busy. Compiler will try to find these kinds of instructions in the program and try to group them together, by reordering certain instruction to optimise everything.</p></li>
+</ol>
+</section>
+<section id="shared-memory">
+<h2>Shared Memory<a class="headerlink" href="#shared-memory" title="Link to this heading">#</a></h2>
+<p>We know what a shared memomry is, we will see how to utilise it by writing a program to do Matrix multiplication.</p>
+<p><em>__shared__</em> keyword allows us to allocate and use the shared memory.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">__global__</span> <span class="n">void</span> <span class="n">samplefunct</span><span class="p">(){</span>
+    <span class="n">__shared__</span> <span class="nb">int</span> <span class="n">A</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="nb">int</span> <span class="n">main</span><span class="p">(){</span>
+    <span class="n">samplefunct</span><span class="o">&lt;&lt;&lt;</span><span class="mi">32</span><span class="p">,</span><span class="mi">32</span><span class="o">&gt;&gt;&gt;</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In the above code sizeof(int)*10 bytes of shared memomry is reserved for each thread block. 32 threads of a particular thread block share this memory.<br />
+Note that when declaring the shared memory it is absolutely neccessary to define how much memory is to be allocated. For example the below is not valid.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">__global__</span> <span class="n">void</span> <span class="n">samplefunct</span><span class="p">(){</span>
+    <span class="n">__shared__</span> <span class="nb">int</span> <span class="n">A</span><span class="p">[];</span>
+<span class="p">}</span>
+
+<span class="nb">int</span> <span class="n">main</span><span class="p">(){</span>
+    <span class="n">samplefunct</span><span class="o">&lt;&lt;&lt;</span><span class="mi">32</span><span class="p">,</span><span class="mi">32</span><span class="o">&gt;&gt;&gt;</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>If you want to allocate dynamically, then we have to tell how much shared memory is needed during the kernel launch by specifying the third parameter.<br />
+<em>samplefunct&lt;&lt;&lt;32,32, shared_memory_in_bytes&gt;&gt;&gt;();</em></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">__global__</span> <span class="n">void</span> <span class="n">samplefunct</span><span class="p">(){</span>
+    <span class="n">__shared__</span> <span class="nb">int</span> <span class="n">A</span><span class="p">[];</span> <span class="o">//</span> <span class="n">maximum</span> <span class="n">of</span> <span class="n">shared_memory_in_bytes</span> <span class="n">of</span> <span class="n">memory</span> <span class="n">can</span> <span class="n">be</span> <span class="n">used</span><span class="o">.</span>
+<span class="p">}</span>
+
+<span class="nb">int</span> <span class="n">main</span><span class="p">(){</span>
+    <span class="nb">int</span> <span class="n">shared_memory_in_bytes</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">int</span><span class="p">);</span>
+    <span class="n">samplefunct</span><span class="o">&lt;&lt;&lt;</span><span class="mi">32</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span><span class="n">shared_memory_in_bytes</span><span class="o">&gt;&gt;&gt;</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The is the code for matrix multiplication of A &amp; B, stores the result in C without using shared memory. This is a basic matrix multiplication algo where each thread computes the result corresponding to a certain index idy(row),idx(column). The thread loops over the row number idy of A and column number idx of B, multiples each element and finds the total sum.</p>
+<p><img alt="img" src="_images/naive_multiplication.png" /></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#include &lt;stdio.h&gt;</span>
+<span class="c1">#include &lt;time.h&gt; // To calculate time</span>
+
+<span class="o">//</span> <span class="n">Cuda</span> <span class="n">error</span> <span class="n">check</span>
+<span class="n">void</span> <span class="n">cuda_check</span><span class="p">(</span><span class="n">cudaError_t</span> <span class="n">error</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">file</span><span class="p">,</span> <span class="nb">int</span> <span class="n">line</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">error</span> <span class="o">!=</span> <span class="n">cudaSuccess</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;[CUDA ERROR] at file </span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">:</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span>
+               <span class="n">cudaGetErrorString</span><span class="p">(</span><span class="n">error</span><span class="p">));</span>
+        <span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="c1">#define cudaCheck(err) (cuda_check(err, __FILE__, __LINE__))</span>
+
+
+<span class="n">const</span> <span class="nb">int</span> <span class="n">DSIZE</span> <span class="o">=</span> <span class="mi">8192</span><span class="p">;</span>
+<span class="n">const</span> <span class="nb">int</span> <span class="n">block_size</span> <span class="o">=</span> <span class="mi">32</span><span class="p">;</span> 
+<span class="n">const</span> <span class="nb">float</span> <span class="n">A_val</span> <span class="o">=</span> <span class="mf">3.0</span><span class="n">f</span><span class="p">;</span>
+<span class="n">const</span> <span class="nb">float</span> <span class="n">B_val</span> <span class="o">=</span> <span class="mf">2.0</span><span class="n">f</span><span class="p">;</span>
+
+<span class="o">//</span> <span class="n">Not</span> <span class="n">making</span> <span class="n">use</span> <span class="n">of</span> <span class="n">shared</span> <span class="n">memory</span><span class="p">,</span>  <span class="n">Naive</span> <span class="n">multiply</span>
+<span class="n">__global__</span> <span class="n">void</span> <span class="n">mmul</span><span class="p">(</span><span class="n">const</span> <span class="nb">float</span> <span class="o">*</span><span class="n">A</span><span class="p">,</span> <span class="n">const</span> <span class="nb">float</span> <span class="o">*</span><span class="n">B</span><span class="p">,</span> <span class="nb">float</span> <span class="o">*</span><span class="n">C</span><span class="p">,</span> <span class="nb">int</span> <span class="n">ds</span><span class="p">)</span> <span class="p">{</span>
+
+  <span class="nb">int</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">threadIdx</span><span class="o">.</span><span class="n">x</span><span class="o">+</span><span class="n">blockDim</span><span class="o">.</span><span class="n">x</span><span class="o">*</span><span class="n">blockIdx</span><span class="o">.</span><span class="n">x</span><span class="p">;</span> <span class="o">//</span> <span class="n">create</span> <span class="n">thread</span> <span class="n">x</span> <span class="n">index</span>
+  <span class="nb">int</span> <span class="n">idy</span> <span class="o">=</span> <span class="n">threadIdx</span><span class="o">.</span><span class="n">y</span><span class="o">+</span><span class="n">blockDim</span><span class="o">.</span><span class="n">y</span><span class="o">*</span><span class="n">blockIdx</span><span class="o">.</span><span class="n">y</span><span class="p">;</span> <span class="o">//</span> <span class="n">create</span> <span class="n">thread</span> <span class="n">y</span> <span class="n">index</span>
+
+  <span class="k">if</span> <span class="p">((</span><span class="n">idx</span> <span class="o">&lt;</span> <span class="n">ds</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">idy</span> <span class="o">&lt;</span> <span class="n">ds</span><span class="p">)){</span>
+    <span class="nb">float</span> <span class="n">temp</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">ds</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+      <span class="o">//</span> <span class="n">Keep</span> <span class="n">track</span> <span class="n">of</span> <span class="n">the</span> <span class="n">running</span> <span class="nb">sum</span>
+      	<span class="n">temp</span> <span class="o">+=</span> <span class="n">A</span><span class="p">[</span><span class="n">idy</span> <span class="o">*</span> <span class="n">ds</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">B</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="n">ds</span> <span class="o">+</span> <span class="n">idx</span><span class="p">];</span> <span class="o">//</span> <span class="n">dot</span> <span class="n">product</span> <span class="n">of</span> <span class="n">row</span> <span class="ow">and</span> <span class="n">column</span>
+    <span class="p">}</span>
+
+    <span class="o">//</span> <span class="n">Write</span> <span class="n">to</span> <span class="k">global</span> <span class="n">memory</span>
+    <span class="n">C</span><span class="p">[</span><span class="n">idy</span><span class="o">*</span><span class="n">ds</span><span class="o">+</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nb">int</span> <span class="n">main</span><span class="p">(){</span>
+
+  <span class="nb">float</span> <span class="o">*</span><span class="n">h_A</span><span class="p">,</span> <span class="o">*</span><span class="n">h_B</span><span class="p">,</span> <span class="o">*</span><span class="n">h_C</span><span class="p">,</span> <span class="o">*</span><span class="n">d_A</span><span class="p">,</span> <span class="o">*</span><span class="n">d_B</span><span class="p">,</span> <span class="o">*</span><span class="n">d_C</span><span class="p">;</span>
+
+
+  <span class="o">//</span> <span class="n">To</span> <span class="n">calculate</span> <span class="n">timings</span><span class="o">.</span>
+  <span class="n">clock_t</span> <span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">;</span>
+  <span class="n">double</span> <span class="n">t1sum</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+  <span class="n">double</span> <span class="n">t2sum</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+
+  <span class="o">//</span> <span class="n">clock</span> <span class="n">start</span>
+  <span class="n">t0</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+
+  <span class="n">h_A</span> <span class="o">=</span> <span class="n">new</span> <span class="nb">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
+  <span class="n">h_B</span> <span class="o">=</span> <span class="n">new</span> <span class="nb">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
+  <span class="n">h_C</span> <span class="o">=</span> <span class="n">new</span> <span class="nb">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
+
+  <span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+    <span class="n">h_A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">A_val</span><span class="p">;</span>
+    <span class="n">h_B</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">B_val</span><span class="p">;</span>
+    <span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;}</span>
+
+  <span class="o">//</span> <span class="n">Initialization</span> <span class="n">timing</span>
+  <span class="n">t1</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+  
+  <span class="n">t1sum</span> <span class="o">=</span> <span class="p">((</span><span class="n">double</span><span class="p">)(</span><span class="n">t1</span><span class="o">-</span><span class="n">t0</span><span class="p">))</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="p">;</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;Init took </span><span class="si">%f</span><span class="s2"> seconds.  Begin compute</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">t1sum</span><span class="p">);</span>
+
+  <span class="o">//</span> <span class="n">Allocate</span> <span class="n">device</span> <span class="n">memory</span>
+  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">)));</span>
+  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_B</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">)));</span>
+  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_C</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">)));</span>
+
+  <span class="o">//</span> <span class="n">copy</span> <span class="nb">input</span> <span class="n">data</span> <span class="n">over</span> <span class="n">to</span> <span class="n">GPU</span>
+  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span> <span class="n">h_A</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span> <span class="n">cudaMemcpyHostToDevice</span><span class="p">));</span>
+  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_B</span><span class="p">,</span> <span class="n">h_B</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span> <span class="n">cudaMemcpyHostToDevice</span><span class="p">));</span>
+  
+
+  
+  <span class="n">dim3</span> <span class="n">block</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="n">block_size</span><span class="p">);</span> 
+  <span class="n">dim3</span> <span class="n">grid</span><span class="p">((</span><span class="n">DSIZE</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">block</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">DSIZE</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">block</span><span class="o">.</span><span class="n">y</span><span class="p">);</span>
+
+  <span class="o">//</span> <span class="n">Launch</span> <span class="n">kernel</span>
+  <span class="n">mmul</span><span class="o">&lt;&lt;&lt;</span><span class="n">grid</span><span class="p">,</span> <span class="n">block</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span> <span class="n">d_B</span><span class="p">,</span> <span class="n">d_C</span><span class="p">,</span> <span class="n">DSIZE</span><span class="p">);</span>
+
+  <span class="o">//</span> <span class="n">Copy</span> <span class="n">results</span> <span class="n">back</span> <span class="n">to</span> <span class="n">host</span>
+  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">h_C</span><span class="p">,</span> <span class="n">d_C</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span> <span class="n">cudaMemcpyDeviceToHost</span><span class="p">));</span>
+
+  <span class="o">//</span> <span class="n">GPU</span> <span class="n">timing</span>
+  <span class="n">t2</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+  <span class="n">t2sum</span> <span class="o">=</span> <span class="p">((</span><span class="n">double</span><span class="p">)(</span><span class="n">t2</span><span class="o">-</span><span class="n">t1</span><span class="p">))</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="p">;</span>
+  <span class="n">printf</span> <span class="p">(</span><span class="s2">&quot;Done. Compute took </span><span class="si">%f</span><span class="s2"> seconds</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">t2sum</span><span class="p">);</span>
+
+  <span class="o">//</span> <span class="n">validate</span> <span class="n">the</span> <span class="n">results</span>
+  <span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">A_val</span><span class="o">*</span><span class="n">B_val</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">)</span> <span class="p">{</span><span class="n">printf</span><span class="p">(</span><span class="s2">&quot;mismatch at index </span><span class="si">%d</span><span class="s2">, was: </span><span class="si">%f</span><span class="s2">, should be: </span><span class="si">%f</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">A_val</span><span class="o">*</span><span class="n">B_val</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">);</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;}</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;Success!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">);</span> 
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+  
+</pre></div>
+</div>
+<p>Code Ouput:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Init took 0.389000 seconds.  Begin compute
+Done. Compute took 16.642000 seconds
+Success!
+</pre></div>
+</div>
+<p>In the above code the global memory is accessed multiple times. It doesn’t use the fact that we can use neighbouring threads to load the required data into the shared memory.
+Assume that a thread block size is (3,3). Three threads in x direction and 3 threads in y direction.(Note it is better to have thread block size in the multiple of 32 due to wrap size).</p>
+<p>This is the algorithm:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Let</span><span class="p">,</span> <span class="n">Size</span> <span class="n">of</span> <span class="n">A</span><span class="p">,</span><span class="n">B</span> <span class="o">=</span> <span class="p">(</span><span class="n">Dsize</span><span class="p">,</span><span class="n">Dsize</span><span class="p">)</span>   
+<span class="n">blockDim</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">blockDim</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">block_size</span><span class="o">.</span>   
+<span class="n">Number</span> <span class="n">of</span> <span class="n">blocks</span> <span class="n">will</span> <span class="n">be</span> <span class="p">(</span> <span class="p">(</span><span class="n">DSIZE</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">block</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">DSIZE</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">block</span><span class="o">.</span><span class="n">y</span> <span class="p">)</span>   
+<span class="mi">1</span><span class="p">)</span> <span class="n">Declare</span> <span class="n">a</span> <span class="n">shared</span> <span class="n">memory</span> <span class="k">for</span> <span class="n">A</span> <span class="ow">and</span> <span class="n">B</span><span class="p">,</span> <span class="n">of</span> <span class="n">blockDim</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">blockDim</span><span class="o">.</span><span class="n">y</span><span class="o">.</span> <span class="n">In</span> <span class="n">our</span> <span class="n">case</span> <span class="n">blockDim</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">blockDim</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">block_size</span><span class="o">.</span>
+    <span class="n">__shared__</span> <span class="nb">int</span> <span class="n">A_shared</span><span class="p">[</span><span class="n">block_size</span><span class="p">][</span><span class="n">block_size</span><span class="p">]</span>
+    <span class="n">__shared__</span> <span class="nb">int</span> <span class="n">B_shared</span><span class="p">[</span><span class="n">block_size</span><span class="p">][</span><span class="n">block_size</span><span class="p">]</span>
+<span class="mi">2</span><span class="p">)</span> 
+<span class="n">In</span> <span class="n">the</span> <span class="n">outer</span> <span class="n">loop</span><span class="p">,</span> <span class="n">Iterate</span> <span class="kn">from</span> <span class="o">*</span><span class="n">i</span><span class="o">*</span> <span class="kn">from</span> <span class="o">*</span><span class="mi">0</span> <span class="n">to</span> <span class="n">DSIZE</span><span class="o">/</span><span class="n">block_size</span><span class="o">*</span>
+<span class="n">Since</span> <span class="n">the</span> <span class="n">shared</span> <span class="n">memory</span> <span class="ow">is</span> <span class="n">availabe</span> <span class="n">to</span> <span class="n">threads</span> <span class="n">inside</span> <span class="n">a</span> <span class="n">thread</span> <span class="n">Block</span><span class="p">,</span> <span class="n">use</span> <span class="n">the</span> <span class="n">neighbouring</span> <span class="n">threads</span> <span class="n">to</span> <span class="n">load</span> <span class="n">blockDim</span><span class="o">.</span><span class="n">x</span> <span class="o">*</span> <span class="n">blockDim</span><span class="o">.</span><span class="n">y</span> <span class="n">amout</span> <span class="n">of</span> <span class="n">data</span> <span class="n">of</span> <span class="n">A</span> <span class="ow">and</span> <span class="n">B</span> <span class="n">into</span> <span class="n">A_shared</span> <span class="ow">and</span> <span class="n">B_shared</span> <span class="n">respectively</span> <span class="ow">in</span> <span class="n">each</span> <span class="n">iteration</span><span class="o">.</span>
+
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">The</span> <span class="n">below</span> <span class="n">figures</span> <span class="n">will</span> <span class="n">help</span> <span class="n">you</span> <span class="n">understand</span> <span class="n">this</span><span class="p">:</span>
+<span class="n">This</span> <span class="ow">is</span> <span class="n">A_shared</span> <span class="k">for</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p><img alt="img" src="_images/shared_mem_it1.png" /></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">This</span> <span class="ow">is</span> <span class="n">A_shared</span> <span class="k">for</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span> 
+</pre></div>
+</div>
+<p><img alt="img" src="_images/shared_mem_it2.png" /></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">This</span> <span class="ow">is</span> <span class="n">B_shared</span> <span class="k">for</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p><img alt="img" src="_images/shared_mem_it3.png" /></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">This</span> <span class="ow">is</span> <span class="n">B_shared</span> <span class="k">for</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span> 
+</pre></div>
+</div>
+<p><img alt="img" src="_images/shared_mem_it4.png" /></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="n">the</span> <span class="n">inner</span> <span class="n">loop</span> <span class="n">accumulate</span> <span class="n">the</span> <span class="nb">sum</span> <span class="n">of</span> <span class="n">multiplication</span> <span class="n">of</span> <span class="n">A_shared</span> <span class="ow">and</span> <span class="n">B_shared</span><span class="o">.</span>   
+</pre></div>
+</div>
+<p>Here is the Code,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#include &lt;stdio.h&gt;</span>
+<span class="c1">#include &lt;time.h&gt; // To calculate time</span>
+
+<span class="o">//</span> <span class="n">Cuda</span> <span class="n">error</span> <span class="n">check</span>
+<span class="n">void</span> <span class="n">cuda_check</span><span class="p">(</span><span class="n">cudaError_t</span> <span class="n">error</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">file</span><span class="p">,</span> <span class="nb">int</span> <span class="n">line</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">error</span> <span class="o">!=</span> <span class="n">cudaSuccess</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;[CUDA ERROR] at file </span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">:</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span>
+               <span class="n">cudaGetErrorString</span><span class="p">(</span><span class="n">error</span><span class="p">));</span>
+        <span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="c1">#define cudaCheck(err) (cuda_check(err, __FILE__, __LINE__))</span>
+
+
+<span class="n">const</span> <span class="nb">int</span> <span class="n">DSIZE</span> <span class="o">=</span> <span class="mi">8192</span><span class="p">;</span>
+<span class="n">const</span> <span class="nb">int</span> <span class="n">block_size</span> <span class="o">=</span> <span class="mi">32</span><span class="p">;</span>  <span class="o">//</span> <span class="n">CUDA</span> <span class="n">maximum</span> <span class="ow">is</span> <span class="mi">1024</span> <span class="o">*</span><span class="n">total</span><span class="o">*</span> <span class="n">threads</span> <span class="ow">in</span> <span class="n">block</span>
+<span class="n">const</span> <span class="nb">float</span> <span class="n">A_val</span> <span class="o">=</span> <span class="mf">3.0</span><span class="n">f</span><span class="p">;</span>
+<span class="n">const</span> <span class="nb">float</span> <span class="n">B_val</span> <span class="o">=</span> <span class="mf">2.0</span><span class="n">f</span><span class="p">;</span>
+
+<span class="o">//</span> <span class="n">Making</span> <span class="n">use</span> <span class="n">of</span> <span class="n">shared</span> <span class="n">memory</span>
+<span class="n">__global__</span> <span class="n">void</span> <span class="n">mmul</span><span class="p">(</span><span class="n">const</span> <span class="nb">float</span> <span class="o">*</span><span class="n">A</span><span class="p">,</span> <span class="n">const</span> <span class="nb">float</span> <span class="o">*</span><span class="n">B</span><span class="p">,</span> <span class="nb">float</span> <span class="o">*</span><span class="n">C</span><span class="p">,</span> <span class="nb">int</span> <span class="n">ds</span><span class="p">)</span> <span class="p">{</span>
+
+  <span class="o">//</span> <span class="n">declare</span> <span class="n">cache</span> <span class="ow">in</span> <span class="n">shared</span> <span class="n">memory</span>
+  <span class="n">__shared__</span> <span class="nb">float</span> <span class="n">As</span><span class="p">[</span><span class="n">block_size</span><span class="p">][</span><span class="n">block_size</span><span class="p">];</span>
+  <span class="n">__shared__</span> <span class="nb">float</span> <span class="n">Bs</span><span class="p">[</span><span class="n">block_size</span><span class="p">][</span><span class="n">block_size</span><span class="p">];</span>
+
+  <span class="nb">int</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">threadIdx</span><span class="o">.</span><span class="n">x</span><span class="o">+</span><span class="n">blockDim</span><span class="o">.</span><span class="n">x</span><span class="o">*</span><span class="n">blockIdx</span><span class="o">.</span><span class="n">x</span><span class="p">;</span> <span class="o">//</span> <span class="n">create</span> <span class="n">thread</span> <span class="n">x</span> <span class="n">index</span>
+  <span class="nb">int</span> <span class="n">idy</span> <span class="o">=</span> <span class="n">threadIdx</span><span class="o">.</span><span class="n">y</span><span class="o">+</span><span class="n">blockDim</span><span class="o">.</span><span class="n">y</span><span class="o">*</span><span class="n">blockIdx</span><span class="o">.</span><span class="n">y</span><span class="p">;</span> <span class="o">//</span> <span class="n">create</span> <span class="n">thread</span> <span class="n">y</span> <span class="n">index</span>
+
+  <span class="k">if</span> <span class="p">((</span><span class="n">idx</span> <span class="o">&lt;</span> <span class="n">ds</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">idy</span> <span class="o">&lt;</span> <span class="n">ds</span><span class="p">)){</span>
+    <span class="nb">float</span> <span class="n">temp</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">ds</span><span class="o">/</span><span class="n">block_size</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+
+      <span class="o">//</span> <span class="n">Load</span> <span class="n">data</span> <span class="n">into</span> <span class="n">shared</span> <span class="n">memory</span>
+      <span class="n">As</span><span class="p">[</span><span class="n">threadIdx</span><span class="o">.</span><span class="n">y</span><span class="p">][</span><span class="n">threadIdx</span><span class="o">.</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">idy</span> <span class="o">*</span> <span class="n">ds</span> <span class="o">+</span> <span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="n">block_size</span> <span class="o">+</span> <span class="n">threadIdx</span><span class="o">.</span><span class="n">x</span><span class="p">)];</span>
+      <span class="n">Bs</span><span class="p">[</span><span class="n">threadIdx</span><span class="o">.</span><span class="n">y</span><span class="p">][</span><span class="n">threadIdx</span><span class="o">.</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">B</span><span class="p">[(</span><span class="n">i</span> <span class="o">*</span> <span class="n">block_size</span> <span class="o">+</span> <span class="n">threadIdx</span><span class="o">.</span><span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">ds</span> <span class="o">+</span> <span class="n">idx</span><span class="p">];</span>
+
+      <span class="o">//</span> <span class="n">Synchronize</span>
+      <span class="n">__syncthreads</span><span class="p">();</span>
+
+      <span class="o">//</span> <span class="n">Keep</span> <span class="n">track</span> <span class="n">of</span> <span class="n">the</span> <span class="n">running</span> <span class="nb">sum</span>
+      <span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">block_size</span><span class="p">;</span> <span class="n">k</span><span class="o">++</span><span class="p">)</span>
+      	<span class="n">temp</span> <span class="o">+=</span> <span class="n">As</span><span class="p">[</span><span class="n">threadIdx</span><span class="o">.</span><span class="n">y</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">Bs</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">threadIdx</span><span class="o">.</span><span class="n">x</span><span class="p">];</span> <span class="o">//</span> <span class="n">dot</span> <span class="n">product</span> <span class="n">of</span> <span class="n">row</span> <span class="ow">and</span> <span class="n">column</span>
+      <span class="n">__syncthreads</span><span class="p">();</span>
+
+    <span class="p">}</span>
+
+    <span class="o">//</span> <span class="n">Write</span> <span class="n">to</span> <span class="k">global</span> <span class="n">memory</span>
+    <span class="n">C</span><span class="p">[</span><span class="n">idy</span><span class="o">*</span><span class="n">ds</span><span class="o">+</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+
+<span class="nb">int</span> <span class="n">main</span><span class="p">(){</span>
+
+  <span class="nb">float</span> <span class="o">*</span><span class="n">h_A</span><span class="p">,</span> <span class="o">*</span><span class="n">h_B</span><span class="p">,</span> <span class="o">*</span><span class="n">h_C</span><span class="p">,</span> <span class="o">*</span><span class="n">d_A</span><span class="p">,</span> <span class="o">*</span><span class="n">d_B</span><span class="p">,</span> <span class="o">*</span><span class="n">d_C</span><span class="p">;</span>
+
+
+  <span class="o">//</span> <span class="n">To</span> <span class="n">calculate</span> <span class="n">timings</span><span class="o">.</span>
+  <span class="n">clock_t</span> <span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">;</span>
+  <span class="n">double</span> <span class="n">t1sum</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+  <span class="n">double</span> <span class="n">t2sum</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+
+  <span class="o">//</span> <span class="n">clock</span> <span class="n">start</span>
+  <span class="n">t0</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+
+  <span class="n">h_A</span> <span class="o">=</span> <span class="n">new</span> <span class="nb">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
+  <span class="n">h_B</span> <span class="o">=</span> <span class="n">new</span> <span class="nb">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
+  <span class="n">h_C</span> <span class="o">=</span> <span class="n">new</span> <span class="nb">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
+
+  <span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+    <span class="n">h_A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">A_val</span><span class="p">;</span>
+    <span class="n">h_B</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">B_val</span><span class="p">;</span>
+    <span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;}</span>
+
+  <span class="o">//</span> <span class="n">Initialization</span> <span class="n">timing</span>
+  <span class="n">t1</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+  
+  <span class="n">t1sum</span> <span class="o">=</span> <span class="p">((</span><span class="n">double</span><span class="p">)(</span><span class="n">t1</span><span class="o">-</span><span class="n">t0</span><span class="p">))</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="p">;</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;Init took </span><span class="si">%f</span><span class="s2"> seconds.  Begin compute</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">t1sum</span><span class="p">);</span>
+
+  <span class="o">//</span> <span class="n">Allocate</span> <span class="n">device</span> <span class="n">memory</span>
+  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">)));</span>
+  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_B</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">)));</span>
+  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_C</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">)));</span>
+
+  <span class="o">//</span> <span class="n">copy</span> <span class="nb">input</span> <span class="n">data</span> <span class="n">over</span> <span class="n">to</span> <span class="n">GPU</span>
+  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span> <span class="n">h_A</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span> <span class="n">cudaMemcpyHostToDevice</span><span class="p">));</span>
+  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_B</span><span class="p">,</span> <span class="n">h_B</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span> <span class="n">cudaMemcpyHostToDevice</span><span class="p">));</span>
+  
+
+  
+  <span class="n">dim3</span> <span class="n">block</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="n">block_size</span><span class="p">);</span> 
+  <span class="n">dim3</span> <span class="n">grid</span><span class="p">((</span><span class="n">DSIZE</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">block</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">DSIZE</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">block</span><span class="o">.</span><span class="n">y</span><span class="p">);</span>
+
+  <span class="o">//</span> <span class="n">Launch</span> <span class="n">kernel</span>
+  <span class="n">mmul</span><span class="o">&lt;&lt;&lt;</span><span class="n">grid</span><span class="p">,</span> <span class="n">block</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span> <span class="n">d_B</span><span class="p">,</span> <span class="n">d_C</span><span class="p">,</span> <span class="n">DSIZE</span><span class="p">);</span>
+
+  <span class="o">//</span> <span class="n">Copy</span> <span class="n">results</span> <span class="n">back</span> <span class="n">to</span> <span class="n">host</span>
+  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">h_C</span><span class="p">,</span> <span class="n">d_C</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span> <span class="n">cudaMemcpyDeviceToHost</span><span class="p">));</span>
+
+  <span class="o">//</span> <span class="n">GPU</span> <span class="n">timing</span>
+  <span class="n">t2</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+  <span class="n">t2sum</span> <span class="o">=</span> <span class="p">((</span><span class="n">double</span><span class="p">)(</span><span class="n">t2</span><span class="o">-</span><span class="n">t1</span><span class="p">))</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="p">;</span>
+  <span class="n">printf</span> <span class="p">(</span><span class="s2">&quot;Done. Compute took </span><span class="si">%f</span><span class="s2"> seconds</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">t2sum</span><span class="p">);</span>
+
+  <span class="o">//</span> <span class="n">validate</span> <span class="n">the</span> <span class="n">results</span>
+  <span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">A_val</span><span class="o">*</span><span class="n">B_val</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">)</span> <span class="p">{</span><span class="n">printf</span><span class="p">(</span><span class="s2">&quot;mismatch at index </span><span class="si">%d</span><span class="s2">, was: </span><span class="si">%f</span><span class="s2">, should be: </span><span class="si">%f</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">A_val</span><span class="o">*</span><span class="n">B_val</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">);</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;}</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;Success!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">);</span> 
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+  
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Init took 0.472000 seconds.  Begin compute
+Done. Compute took 3.454000 seconds
+Success!
+</pre></div>
+</div>
+<p><strong>The time went down from 16.642000 seconds to 3.454000 seconds. This is 79.2% reduction in time!!!</strong><br />
+I am using 1060 Ti, I know its old. I am GPU poor.</p>
+</section>
+<section id="more-about-shared-memory">
+<h2>More About Shared Memory<a class="headerlink" href="#more-about-shared-memory" title="Link to this heading">#</a></h2>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./."
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="01-getting-started.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Getting Started: Cuda C++</p>
+      </div>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wrap-and-wrap-scheduler">Wrap And Wrap Scheduler</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#types-of-memories">Types of Memories</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-coalesing-matters">Why coalesing matters?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#shared-memory">Shared Memory</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#more-about-shared-memory">More About Shared Memory</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Yoghes and The Internet
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
