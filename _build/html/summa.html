@@ -6,8 +6,9 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; Cuda C++: Crawling, Walking and Running</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Matrix Multiplication Using cuBLAS. &#8212; Cuda C++: Crawling, Walking and Running</title>
   
   
   
@@ -59,8 +60,10 @@
     <script async="async" src="_static/sphinx-thebe.js?v=c100c467"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
-    <link rel="index" title="Index" href="#" />
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'summa';</script>
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -242,7 +245,7 @@
       
       
       
-      <li><a href="https://github.com/yogheswaran-a/cudanotes/issues/new?title=Issue%20on%20page%20%2Fgenindex.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/yogheswaran-a/cudanotes/issues/new?title=Issue%20on%20page%20%2Fsumma.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -254,6 +257,54 @@
   </span>
 <span class="btn__text-container">Open issue</span>
 </a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/summa.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
 </li>
       
   </ul>
@@ -287,7 +338,9 @@
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
 </button>
-
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
 </div></div>
       
     </div>
@@ -298,11 +351,23 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1></h1>
+    <h1>Matrix Multiplication Using cuBLAS.</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#definition-of-cublassgemmstridedbatched">Definition of <code class="docutils literal notranslate"><span class="pre">cublasSgemmStridedBatched</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Parameters:</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -312,13 +377,101 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-
-<h1 id="index">Index</h1>
-
-<div class="genindex-jumpbox">
- 
+  <section id="matrix-multiplication-using-cublas">
+<h1>Matrix Multiplication Using cuBLAS.<a class="headerlink" href="#matrix-multiplication-using-cublas" title="Link to this heading">#</a></h1>
+<p>We wrote our own matrix multiplication kernel in the previous chapter. CuBLAS provides a in built function called <em>cublasSgemmStridedBatched</em>.<br />
+All of the information about this can be found here, <a class="reference external" href="https://docs.nvidia.com/cuda/cublas/#cublas-t-gemmstridedbatched">cublasSgemmStridedBatched</a> and <a class="reference external" href="https://developer.nvidia.com/blog/cublas-strided-batched-matrix-multiply/">Nvidia blog</a>.<br />
+We will make use of it.</p>
+<section id="definition-of-cublassgemmstridedbatched">
+<h2>Definition of <code class="docutils literal notranslate"><span class="pre">cublasSgemmStridedBatched</span></code><a class="headerlink" href="#definition-of-cublassgemmstridedbatched" title="Link to this heading">#</a></h2>
+<p>In our code A,B and C are stored contiguously.<br />
+A has a dimesnion of Batchsize x number_of_heads x seqeunce_length x d.<br />
+B has a dimesnion of Batchsize x number_of_heads x seqeunce_length x d.<br />
+C will have dimension of Batchsize x number_of_heads x seqeunce_length x seqeunce_length.<br />
+While performing multiplication we will do it by thinking that A and B has (Batchsize x number_of_heads) number of batches, in each batch we will have a matrix of dimension seqeunce_length x d. The output C will have (Batchsize x number_of_heads) number of batches, in each batch we will have a matrix of dimension seqeunce_length x seqeunce_length.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">cublasSgemmStridedBatched</span></code> function performs batched matrix-matrix multiplication. Mathematically, it computes:</p>
+<div class="math notranslate nohighlight">
+\[
+C[i] = \alpha \cdot (A[i]^T \times B[i]) + \beta \cdot C[i], \quad \text{for } i = 0, \dots, \text{Batchsize x number-of-heads} - 1
+\]</div>
+<section id="parameters">
+<h3>Parameters:<a class="headerlink" href="#parameters" title="Link to this heading">#</a></h3>
+<p>Remember we want to multiply A[i]xB[i] for each of Batchsize x number_of_heads times.
+Where:</p>
+<ul class="simple">
+<li><p>A[i], B[i], and C[i] are the i-th matrices in the batch(Batchsize x number_of_heads).</p></li>
+<li><p>α and β are scalar multipliers.</p></li>
+<li><p>A[i] x B[i] denotes the matrix multiplication of A[i] and B[i].</p></li>
+<li><p>Batchsize x number_of_heads is the number of such matrix multiplications processed in parallel.</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cublasStatus_t</span> <span class="n">cublasSgemmStridedBatched</span><span class="p">(</span><span class="n">cublasHandle_t</span> <span class="n">handle</span><span class="p">,</span>
+                                  <span class="n">cublasOperation_t</span> <span class="n">transa</span><span class="p">,</span>
+                                  <span class="n">cublasOperation_t</span> <span class="n">transb</span><span class="p">,</span>
+                                  <span class="nb">int</span> <span class="n">m</span><span class="p">,</span> <span class="nb">int</span> <span class="n">n</span><span class="p">,</span> <span class="nb">int</span> <span class="n">k</span><span class="p">,</span>
+                                  <span class="n">const</span> <span class="nb">float</span>           <span class="o">*</span><span class="n">alpha</span><span class="p">,</span>
+                                  <span class="n">const</span> <span class="nb">float</span>           <span class="o">*</span><span class="n">A</span><span class="p">,</span> <span class="nb">int</span> <span class="n">lda</span><span class="p">,</span>
+                                  <span class="n">long</span> <span class="n">long</span> <span class="nb">int</span>          <span class="n">strideA</span><span class="p">,</span>
+                                  <span class="n">const</span> <span class="nb">float</span>           <span class="o">*</span><span class="n">B</span><span class="p">,</span> <span class="nb">int</span> <span class="n">ldb</span><span class="p">,</span>
+                                  <span class="n">long</span> <span class="n">long</span> <span class="nb">int</span>          <span class="n">strideB</span><span class="p">,</span>
+                                  <span class="n">const</span> <span class="nb">float</span>           <span class="o">*</span><span class="n">beta</span><span class="p">,</span>
+                                  <span class="nb">float</span>                 <span class="o">*</span><span class="n">C</span><span class="p">,</span> <span class="nb">int</span> <span class="n">ldc</span><span class="p">,</span>
+                                  <span class="n">long</span> <span class="n">long</span> <span class="nb">int</span>          <span class="n">strideC</span><span class="p">,</span>
+                                  <span class="nb">int</span> <span class="n">batchCount</span><span class="p">)</span>
+</pre></div>
 </div>
+</section>
+<section id="id1">
+<h3>Parameters:<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<ul>
+<li><p>cublasHandle_t handle: it is the handle which we have discussed about in the earlier section.</p></li>
+<li><p>cublasOperation_t transa : the  parameter specifies whether the matrices A[i] should be as it is, transposed or conjugate-transposed before multiplication.
+transa can take one of the following values:</p>
+<ul class="simple">
+<li><p>CUBLAS_OP_N:
+No transpose.<br />
+The matrix A[i] is used as-is.</p></li>
+<li><p>CUBLAS_OP_T:
+Transpose.<br />
+The matrix A[i]A[i] is transposed, effectively swapping it dimensions to k×mk×m.</p></li>
+<li><p>CUBLAS_OP_C:
+Conjugate transpose.
+The matrix A[i]A[i] is conjugate-transposed (useful for complex numbers).</p></li>
+</ul>
+<p>If <code class="docutils literal notranslate"><span class="pre">transa</span> <span class="pre">=</span> <span class="pre">CUBLAS_OP_T</span></code>, the operation modifies the multiplication such that ( A[i] ) is transposed:</p>
+</li>
+</ul>
+<div class="math notranslate nohighlight">
+\[
+C[i] = \alpha \cdot (A[i]^T \times B[i]) + \beta \cdot C[i], \quad \text{for } i = 0, \dots, \text{batchCount x t} - 1
+\]</div>
+<ul class="simple">
+<li><p>m : number of rows of matrix A[i] and C[i]. In attention it will be</p></li>
+<li><p>n : number of columns of op(B[i]) and C[i].</p></li>
+<li><p>k : number of columns of op(A[i]) and rows of op(B[i]).</p></li>
+</ul>
+</section>
+</section>
+</section>
 
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./."
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
 
                 </article>
               
@@ -336,6 +489,26 @@
             </div>
             
             
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#definition-of-cublassgemmstridedbatched">Definition of <code class="docutils literal notranslate"><span class="pre">cublasSgemmStridedBatched</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Parameters:</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

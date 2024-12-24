@@ -20,8 +20,8 @@ For example say vector A,B are 1x5.
 A = [1,  2, 3, 4, 5]  
 B = [11,12,13,14,15] 
 
-```
-# Vector addition 
+```c++
+// Vector addition 
 vector<int> A{1,2,3,4,5};
 vector<int> B{11,12,13,14,15};
 vector<int> C(5,0);
@@ -47,7 +47,7 @@ Let's dive straight into how to perform vector addtion with a GPU. For this we n
 
 Just like we initialize memory in C++ program for CPU, we need to initialize memory in GPU.
 
-```
+```c++
 // Memory allocation in C++
 
 float *h_A; //h_ to represent host
@@ -55,7 +55,7 @@ int n = 10;
 h_A = (float *)malloc(n*sizeof(float));
 ```
 
-```
+```c++
 // Memory allocation in Cuda C++
 
 float *d_A;
@@ -64,7 +64,7 @@ CudaMalloc((void **)&d_A,n*sizeof(float));
 ```
 **CudaMalloc()** is used to allocate memory(in global memory, more about this) in the GPU. It is very similar to *malloc()*. Notice here that we send the address of d_A. *I am guessing here, whatever memory is allocated in GPU its address is stored in d_A, hence we are passing the addres of d_A, so that in this address(d_A) we could store the address of GPU allocated memory's address.*  
 Now lets transfer some data from host to device, that is from CPU to GPU here. This is done by using **cudaMemcpy()**
-```
+```c++
 float *h_A; //Represents the memory in host(CPU)
 float *d_A; //Represents the memory in device(GPU)
 int n = 10;
@@ -95,7 +95,7 @@ The data is transfered from the RAM of CPU to the DRAM of GPU. The DRAM of GPU i
 
 How to copy data from device(GPU) to host(CPU) after we have performed some operations and we want the result in the CPU to display it? You guessed it right! using **cudaMemcpy()** but the third parameter is changed to cudaMemcpyDeviceToHost.
 
-```
+```c++
 cudaMemcpy(h_A, d_A, n, cudaMemcpyHostToDevice); // transfer the data from GPU to CPU.
 ```
 
@@ -107,7 +107,7 @@ So instructions like add etc can be done on these cores parallely.
 To make use of these cores we need to write special functions called *kernel functions*. Whatever code is written iniside these *kernel functions* are executed on the GPU.
 This is the syntax of *kernel functions*
 
-```
+```c++
 __global__ void function_name(arguments){
 
 }
@@ -122,7 +122,7 @@ The Cuda compiler which is called *NVCC* separates the host code from device cod
 
 The GPUs has many number of cores, how do we specify how many number of cores are needed for our program? We do this while making the kernel function call inside the host code.
 
-```
+```c++
 __global__ void add_vectors(arguments){
     ... //some code to add numbers 
 }
@@ -137,7 +137,7 @@ int main(){
 ```
 
 Explanation:
-```
+```c++
 int N = 100;
 add_vectors<<<1,N>>>(arguments);
 
@@ -148,7 +148,7 @@ So when a kernel is launched, in each of the 1*N cores the function add_vectors(
 
 Combing the memory transfer and kernel launch.
 
-```
+```c++
 __global__ void add_vectors(int *A, int *B, int *C,const int n){
     // some code to add the vectors A and B and store it in C, we will come back to this.
     // results stored in C
@@ -219,7 +219,7 @@ The below will give you a better picture.
 
 ## What are Threads, Blocks and Grids?
 
-```
+```c++
 int N = 100;
 add_vector<<<1,N>>>(arguments);
 ```
@@ -250,7 +250,7 @@ Hierarchy
 Threads, Blocks and Grids are more of a software concepts, but is also loosely linked with hardware part of GPU.
 ```
 
-```
+```c++
 int threads_per_block = 32;
 int blocks_per_grids = 64;
 add_vector<<<threads_per_block,blocks_per_grids>>>(arguments);
@@ -266,7 +266,7 @@ As the figure shows, a Grid can be viewed as a cube. It has 3 dimensions x,y and
 
 But in the above code we did not specify 3 dimensions for number of blocks per thread and number of threads per block. It was just one. When only one number is specified by default it means x dimension. To specify blocks and threads in all three dimension we make use of *dim3* class.
 
-```
+```c++
 dim3 blocks(1,2,3);     // A Grid will have 1 block in x dimension, 2 blocks in y and 3 blocks in z. 
 dim3 threads(11,12,13); // A block will have 11 threads in x dimension, 12 threads in y and 13 threads in z dimension. 
 add_vector<<<blocks,threads>>>(arguments);
@@ -286,7 +286,7 @@ lets Launch a kernel of gird dim =(2,2), block dim = (2,2). Inside the kernel le
 I would request you to write the program by yourself first.  
 
 The below is the program.
-```
+```c++
 #include <stdio.h>
 
 __global__ void printcor(){
@@ -326,7 +326,7 @@ Observe that *cudaDeviceSynchronize()* function is used here. This is because if
 
 It is a good practice to see if any of the cuda operations are throwing an error. For that we use the below code. 
 
-```
+```c++
 void cuda_check(cudaError_t error, const char *file, int line) {
     if (error != cudaSuccess) {
         printf("[CUDA ERROR] at file %s:%d:\n%s\n", file, line,
@@ -361,7 +361,7 @@ int index = threadIdx.x + blockIdx.x * blockDim.x;
 
 
 Putting it all together
-```
+```c++
 #include <stdio.h>
 
 __global__ void add_vectors(int *A, int *B, int *C,const int n){

@@ -6,3 +6,5 @@ root: 00-landing-page
 chapters:
 - file: 01-getting-started
 - file: 02-instruction-dispatch-and-memory
+- file: 03-flash-attention-I
+- file: 04-flash-attention-II

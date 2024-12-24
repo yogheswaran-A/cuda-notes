@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Cuda C++: Crawling, Walking And Running &#8212; Cuda C++: Crawling, Walking and Running</title>
+    <title>Flash Attention - II &#8212; Cuda C++: Crawling, Walking and Running</title>
   
   
   
@@ -60,12 +60,10 @@
     <script async="async" src="_static/sphinx-thebe.js?v=c100c467"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
-    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '00-landing-page';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '04-flash-attention-II';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Getting Started: Cuda C++" href="01-getting-started.html" />
+    <link rel="prev" title="Flash Attention - I" href="03-flash-attention-I.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -117,8 +115,6 @@
       
       
       
-        
-      
       <dialog id="pst-primary-sidebar-modal"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
@@ -138,7 +134,7 @@
     
   
 
-<a class="navbar-brand logo" href="#">
+<a class="navbar-brand logo" href="00-landing-page.html">
   
   
   
@@ -159,17 +155,17 @@
     <div class="bd-toc-item navbar-nav active">
         
         <ul class="nav bd-sidenav bd-sidenav__home-link">
-            <li class="toctree-l1 current active">
-                <a class="reference internal" href="#">
+            <li class="toctree-l1">
+                <a class="reference internal" href="00-landing-page.html">
                     Cuda C++: Crawling, Walking And Running
                 </a>
             </li>
         </ul>
-        <ul class="nav bd-sidenav">
+        <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="01-getting-started.html">Getting Started: Cuda C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="02-instruction-dispatch-and-memory.html">Instruction Dispatch and Memory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="03-flash-attention-I.html">Flash Attention - I</a></li>
-<li class="toctree-l1"><a class="reference internal" href="04-flash-attention-II.html">Flash Attention - II</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Flash Attention - II</a></li>
 </ul>
 
     </div>
@@ -246,7 +242,7 @@
       
       
       
-      <li><a href="https://github.com/yogheswaran-a/cudanotes/issues/new?title=Issue%20on%20page%20%2F00-landing-page.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/yogheswaran-a/cudanotes/issues/new?title=Issue%20on%20page%20%2F04-flash-attention-II.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -276,7 +272,7 @@
       
       
       
-      <li><a href="_sources/00-landing-page.md" target="_blank"
+      <li><a href="_sources/04-flash-attention-II.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -352,7 +348,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Cuda C++: Crawling, Walking And Running</h1>
+    <h1>Flash Attention - II</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -362,10 +358,8 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#little-about-myself-and-why-i-wrote-this">Little about myself and why I wrote this</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#acknowledgments">Acknowledgments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-requisite">Pre-requisite</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contribute">Contribute</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attention-pytorch-code">Attention Pytorch Code.</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-inputs-and-outputs">Defining the inputs and outputs.</a></li>
 </ul>
             </nav>
         </div>
@@ -377,47 +371,64 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="cuda-c-crawling-walking-and-running">
-<h1>Cuda C++: Crawling, Walking And Running<a class="headerlink" href="#cuda-c-crawling-walking-and-running" title="Link to this heading">#</a></h1>
-<p><img alt="img" src="_images/landing_page_cuda.jpg" /></p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This is a first draft. There are a lot of grammatical mistakes, which will be corrected soon.</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Please note that I am not a subject matter expertise, whatever is written here is yet to be verified by someone is. These are my personal notes.</p>
-</div>
-<section id="little-about-myself-and-why-i-wrote-this">
-<h2>Little about myself and why I wrote this<a class="headerlink" href="#little-about-myself-and-why-i-wrote-this" title="Link to this heading">#</a></h2>
-<p>When I got my hands on 8085 microprocessor, I just couldn’t let it go. For the whole sem I played with it. I still remember the days when I was amazed/perplexed when I understood how NMOS, CMOS and BICMOS circuit work, when I designed logic circuits using MOS and CMOS technology, when I understood how multiplexers, memory, programmable logic cells, x86 instruction set etc (I forgot most of it, but I think in a month I will be able to learn it.)
-But soon due to external factors, and the major I took while joining the college I had to pursue a carrer in Instrumentation and control(control systems is freaking amazing, instrumentation not so much). So I spent two years in energy industry until I finally decided that this was not for me, and began my journey as data scientist.
-After 2 years working on developing models, I stumbled upon the llm.c repo by Andrej Karpathy(Thanks for all the educational content, I owe you a lot). The pytorch does a lot of abstraction and I really didn’t know what was going on inside, but I was always curious I didn’t take any action to learn it. After checking the llm.c repo, I decided to do learn more about GPU programming, since I have always used NVIDIA GPUs, cuda was a defualt choice for me to know what is really going on behind all the python codes I had written.</p>
-<p>So this is an attempt to document my learning about Cuda C++ in my free time and to give a glimpse of how good or bad I am.</p>
-</section>
-<section id="acknowledgments">
-<h2>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Link to this heading">#</a></h2>
-<p>The following resources have helped me majorly,</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="flash-attention-ii">
+<h1>Flash Attention - II<a class="headerlink" href="#flash-attention-ii" title="Link to this heading">#</a></h1>
+<p>This chapter assumes that you know about attention mechanism. If not please see this video, which provides a lot of info about how to model, train a GPT-2 from ground up, <a class="reference external" href="https://www.youtube.com/watch?v=l8pRSuU81PU">Andrej Karpathy video</a>.
+This chapter compromises of:</p>
 <ol class="arabic simple">
-<li><p><a class="reference external" href="https://www.olcf.ornl.gov/cuda-training-series/">Main website</a>, <a class="reference external" href="https://www.youtube.com/playlist?list=PL6RdenZrxrw-zNX7uuGppWETdxt_JxdMj">Cuda-Training-Series - YT playlist</a>.</p></li>
-<li><p><a class="reference external" href="https://github.com/karpathy/llm.c/">llm.c</a>.</p></li>
-<li><p><a class="reference external" href="https://developer.nvidia.com/blog/developer-blog-cuda-refresher-july-2020-updated/">NVIDIA Blogs</a></p></li>
-<li><p>The Internet.</p></li>
+<li><p>Attention Pytorch Code.</p></li>
+<li><p>Attention From Scratch Using Cuda.</p></li>
 </ol>
-<p>As I write each article I will provide the resources which helped to understand the concepts better.</p>
-</section>
-<section id="pre-requisite">
-<h2>Pre-requisite<a class="headerlink" href="#pre-requisite" title="Link to this heading">#</a></h2>
-<p>The readers should have basic C or C++ knowledge.</p>
-</section>
-<section id="contribute">
-<h2>Contribute<a class="headerlink" href="#contribute" title="Link to this heading">#</a></h2>
-<p>If you find any mistakes, kindly raise an issue to correct it. I am working, if there is any delay in my response I apologise.<br />
-If you find this useful could you please give it a <a class="reference external" href="https://github.com/yogheswaran-a/cuda-notes/stargazers">star on GitHub</a> and share it with others. Thank you!<br />
-If you did not find this useful, I apologize for wasting your precious time. The resources I have mentioned above might help you learn.</p>
-</section>
-<div class="toctree-wrapper compound">
+<section id="attention-pytorch-code">
+<h2>Attention Pytorch Code.<a class="headerlink" href="#attention-pytorch-code" title="Link to this heading">#</a></h2>
+<p>The below is the computation of Attention using pytorch.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qkvr</span><span class="p">):</span> <span class="o">//</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">qkv</span> <span class="n">matrix</span>
+        <span class="n">B</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">three_C</span> <span class="o">=</span> <span class="n">qkvr</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="c1"># batch size, sequence length, embedding dimensionality (n_embd)</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">three_C</span> <span class="o">//</span> <span class="mi">3</span>
+
+        <span class="c1">#### step 1: permute ####</span>
+        <span class="c1"># calculate query, key, values for all heads in batch and move head forward to be the batch dim</span>
+        <span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span>  <span class="o">=</span> <span class="n">split</span><span class="p">(</span><span class="n">qkvr</span><span class="p">)</span> <span class="c1"># split qkvr into q, k, v </span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">n_head</span><span class="p">,</span> <span class="n">C</span> <span class="o">//</span> <span class="n">n_head</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="c1"># (B, nh, T, hs)</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">n_head</span><span class="p">,</span> <span class="n">C</span> <span class="o">//</span> <span class="n">n_head</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="c1"># (B, nh, T, hs)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">n_head</span><span class="p">,</span> <span class="n">C</span> <span class="o">//</span> <span class="n">n_head</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="c1"># (B, nh, T, hs)</span>
+
+        <span class="c1"># manual implementation of attention</span>
+        
+        <span class="c1">#### step 2: Dot product ########</span>
+        <span class="n">att</span> <span class="o">=</span> <span class="p">(</span><span class="n">q</span> <span class="o">@</span> <span class="n">k</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+        
+        <span class="c1">##### step 3: scale and mask ######</span>
+        <span class="c1"># block_size is the max sequence length</span>
+        <span class="n">bias</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="n">block_size</span><span class="p">))</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">block_size</span><span class="p">,</span> <span class="n">block_size</span><span class="p">)</span> 
+        <span class="n">att</span> <span class="o">=</span> <span class="n">att</span><span class="o">.</span><span class="n">masked_fill</span><span class="p">(</span><span class="n">bias</span><span class="p">[:,:,:</span><span class="n">T</span><span class="p">,:</span><span class="n">T</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;-inf&#39;</span><span class="p">))</span>
+        
+        <span class="c1">##### step 4: Perform softmax operation ######</span>
+        <span class="n">att</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">att</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="c1">#### Step 5: calculate y #######</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">att</span> <span class="o">@</span> <span class="n">v</span> <span class="c1"># (B, nh, T, T) x (B, nh, T, hs) -&gt; (B, nh, T, hs)</span>
+        
+        <span class="c1">#### step 6: unpermute final output ######</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span> <span class="c1"># re-assemble all head outputs side by side</span>
+        <span class="k">return</span> <span class="n">y</span>
+</pre></div>
 </div>
+<p>The cuda code we write will be made of these sub components, which is defined in the above code:</p>
+<ul class="simple">
+<li><p>Step 0: The int main() function where we define the host/device inputs, outputs and intermediate variables.</p></li>
+<li><p>step 1 - Permute: Splitting the input qkv into q, k, v. By calling the permute kernel.</p></li>
+<li><p>step 2 - Dot Product: Dot product of q and k to compute preattn.</p></li>
+<li><p>step 3 - Scale And Mask: Scale and mask the entries of preattn matrix.</p></li>
+<li><p>step 4 - Perform softmax operation.</p></li>
+<li><p>step 5 - Calculate y.</p></li>
+<li><p>step 6 - Unpermute y.</p></li>
+</ul>
+<p>Lets start with step 0, where we define the host/device inputs, outputs and intermediate variables.</p>
+</section>
+<section id="defining-the-inputs-and-outputs">
+<h2>Defining the inputs and outputs.<a class="headerlink" href="#defining-the-inputs-and-outputs" title="Link to this heading">#</a></h2>
+</section>
 </section>
 
     <script type="text/x-thebe-config">
@@ -450,14 +461,14 @@ If you did not find this useful, I apologize for wasting your precious time. The
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
-    <a class="right-next"
-       href="01-getting-started.html"
-       title="next page">
+    <a class="left-prev"
+       href="03-flash-attention-I.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Getting Started: Cuda C++</p>
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Flash Attention - I</p>
       </div>
-      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>
@@ -476,10 +487,8 @@ If you did not find this useful, I apologize for wasting your precious time. The
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#little-about-myself-and-why-i-wrote-this">Little about myself and why I wrote this</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#acknowledgments">Acknowledgments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-requisite">Pre-requisite</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contribute">Contribute</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attention-pytorch-code">Attention Pytorch Code.</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-inputs-and-outputs">Defining the inputs and outputs.</a></li>
 </ul>
   </nav></div>
 

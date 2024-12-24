@@ -63,6 +63,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = '02-instruction-dispatch-and-memory';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Flash Attention - I" href="03-flash-attention-I.html" />
     <link rel="prev" title="Getting Started: Cuda C++" href="01-getting-started.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -164,6 +165,8 @@
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="01-getting-started.html">Getting Started: Cuda C++</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Instruction Dispatch and Memory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03-flash-attention-I.html">Flash Attention - I</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04-flash-attention-II.html">Flash Attention - II</a></li>
 </ul>
 
     </div>
@@ -357,8 +360,14 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wrap-and-wrap-scheduler">Wrap And Wrap Scheduler</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#types-of-memories">Types of Memories</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-coalesing-matters">Why coalesing matters?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#types-of-memories">Types of Memories</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#little-bit-about-l1-l2-and-global-memory-working">Little bit about L1, L2 and global memory working</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-coalesing-matters">Why coalesing matters?</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#some-optimization-tips-to-achieve-maximum-efficiency">Some optimization tips to achieve maximum efficiency.</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#shared-memory">Shared Memory</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#more-about-shared-memory">More About Shared Memory</a></li>
 </ul>
@@ -398,8 +407,8 @@ A <strong>threadblock</strong> is a <em>collection of warps (up to 32 of them)</
 <ol class="arabic simple">
 <li><p><strong>Global Memory</strong>: This like the DRAM. All the threads from all the SM’s have access to this memory. When a thread accesses this memory, the processing time is large. So this is a costly operation.</p></li>
 </ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">__global__</span> <span class="n">void</span> <span class="n">vector_add</span><span class="p">(</span><span class="nb">int</span> <span class="o">*</span><span class="n">A</span><span class="p">,</span><span class="nb">int</span> <span class="o">*</span><span class="n">B</span><span class="p">,</span><span class="nb">int</span> <span class="o">*</span><span class="n">C</span><span class="p">,</span><span class="nb">int</span> <span class="n">n</span><span class="p">){</span>
-    <span class="o">...</span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">__global__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">vector_add</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">A</span><span class="p">,</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">B</span><span class="p">,</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">C</span><span class="p">,</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">){</span>
+<span class="w">    </span><span class="p">...</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -418,10 +427,12 @@ A <strong>threadblock</strong> is a <em>collection of warps (up to 32 of them)</
 <p><em>cycle 1</em>: Thread 0 tries to acccess A[0]. Since its the first time L1 does not have A[0], so A[0] is accessed from the global memory, the data is also stored in the L1 cache. Now Thread 0 adds 1 to it, since the data is modified the L1 cache is invalidated. Now instead of storing the result in the global memory, since we know the other threads will use this, we can store it manually(write code such a way) in the shared memory. So thread 0 stores it in a shared memory.</p>
 <p><em>cycle 2</em>: Thread 1 tries to acccess A[0]. Since its L1 has invalid A[0] data, A[0] is accessed from the shared memory. Now Thread 1 adds 1 to it, stores it in the shared memory.</p>
 <p><em>cycle 3</em>: Thread 2 tries to acccess A[0]. The data is in shared memory, thread 2 reads from it. Now Thread 2 adds 1 to it, stores it in the shared memory.</p>
-<p><strong>Little bit about L1, L2 and global memory working</strong><br />
-Suppose we launch a kernel with 32 threads and 2 thread blocks. Initially L1 and L2 caches are clear. Suppose Thread 0 from block 0 access A[0] from global memory. Since L2 does not have it, the data will be stored in L2 and in L1(L1 of the thread block 0). If in the next cycle if thread 0 from block 1 accesses A[0] since it is present in the L2 cache it will read from it and also cache the data in the L1 cache of its thread block.</p>
+<section id="little-bit-about-l1-l2-and-global-memory-working">
+<h3>Little bit about L1, L2 and global memory working<a class="headerlink" href="#little-bit-about-l1-l2-and-global-memory-working" title="Link to this heading">#</a></h3>
+<p>Suppose we launch a kernel with 32 threads and 2 thread blocks. Initially L1 and L2 caches are clear. Suppose Thread 0 from block 0 access A[0] from global memory. Since L2 does not have it, the data will be stored in L2 and in L1(L1 of the thread block 0). If in the next cycle if thread 0 from block 1 accesses A[0] since it is present in the L2 cache it will read from it and also cache the data in the L1 cache of its thread block.</p>
 <p>Figure depicting the different types of Memories. Please note that the numbers provided in th fig below are only to give an idea about the realtive memory capacity and speed.
 <img alt="img" src="_images/memory_heri.jpg" /></p>
+</section>
 </section>
 <section id="why-coalesing-matters">
 <h2>Why coalesing matters?<a class="headerlink" href="#why-coalesing-matters" title="Link to this heading">#</a></h2>
@@ -456,7 +467,8 @@ Threads 24 - 31: access 480 - 511 bytes.<br />
 In this scenario we get bus utilization of 4%. And total time taken is 4 clock cycles.</p></li>
 </ol>
 <p>Scenario 5 is why coalesing matters. A warp should access within a contiguous region, ie consecutive threads accessing consecutive memory addresses.</p>
-<p><strong>Some optimization tips to achieve maximum efficiency.</strong></p>
+<section id="some-optimization-tips-to-achieve-maximum-efficiency">
+<h3>Some optimization tips to achieve maximum efficiency.<a class="headerlink" href="#some-optimization-tips-to-achieve-maximum-efficiency" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">1</span><span class="p">)</span> <span class="n">Strive</span> <span class="k">for</span> <span class="n">perfect</span> <span class="n">coalescing</span>
     <span class="p">(</span><span class="n">Align</span> <span class="n">starting</span> <span class="n">address</span> <span class="o">-</span> <span class="n">may</span> <span class="n">require</span> <span class="n">padding</span><span class="p">)</span>    
     <span class="n">A</span> <span class="n">warp</span> <span class="n">should</span> <span class="n">access</span> <span class="n">within</span> <span class="n">a</span> <span class="n">contiguous</span> <span class="n">region</span><span class="o">.</span>  
@@ -476,140 +488,149 @@ In this scenario we get bus utilization of 4%. And total time taken is 4 clock c
 <li><p>Remeber that wrap scheduer is a dual issue. When the adjacent instructions are independent, scheduler may issue both these intructions to make sure that the threads stay busy. Compiler will try to find these kinds of instructions in the program and try to group them together, by reordering certain instruction to optimise everything.</p></li>
 </ol>
 </section>
+</section>
 <section id="shared-memory">
 <h2>Shared Memory<a class="headerlink" href="#shared-memory" title="Link to this heading">#</a></h2>
 <p>We know what a shared memomry is, we will see how to utilise it by writing a program to do Matrix multiplication.</p>
 <p><em>__shared__</em> keyword allows us to allocate and use the shared memory.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">__global__</span> <span class="n">void</span> <span class="n">samplefunct</span><span class="p">(){</span>
-    <span class="n">__shared__</span> <span class="nb">int</span> <span class="n">A</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">__global__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">samplefunct</span><span class="p">(){</span>
+<span class="w">    </span><span class="n">__shared__</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">A</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
 <span class="p">}</span>
 
-<span class="nb">int</span> <span class="n">main</span><span class="p">(){</span>
-    <span class="n">samplefunct</span><span class="o">&lt;&lt;&lt;</span><span class="mi">32</span><span class="p">,</span><span class="mi">32</span><span class="o">&gt;&gt;&gt;</span><span class="p">();</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="n">samplefunct</span><span class="o">&lt;&lt;&lt;</span><span class="mi">32</span><span class="p">,</span><span class="mi">32</span><span class="o">&gt;&gt;&gt;</span><span class="p">();</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>In the above code sizeof(int)*10 bytes of shared memomry is reserved for each thread block. 32 threads of a particular thread block share this memory.<br />
 Note that when declaring the shared memory it is absolutely neccessary to define how much memory is to be allocated. For example the below is not valid.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">__global__</span> <span class="n">void</span> <span class="n">samplefunct</span><span class="p">(){</span>
-    <span class="n">__shared__</span> <span class="nb">int</span> <span class="n">A</span><span class="p">[];</span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">__global__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">samplefunct</span><span class="p">(){</span>
+<span class="w">    </span><span class="n">__shared__</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">A</span><span class="p">[];</span>
 <span class="p">}</span>
 
-<span class="nb">int</span> <span class="n">main</span><span class="p">(){</span>
-    <span class="n">samplefunct</span><span class="o">&lt;&lt;&lt;</span><span class="mi">32</span><span class="p">,</span><span class="mi">32</span><span class="o">&gt;&gt;&gt;</span><span class="p">();</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="n">samplefunct</span><span class="o">&lt;&lt;&lt;</span><span class="mi">32</span><span class="p">,</span><span class="mi">32</span><span class="o">&gt;&gt;&gt;</span><span class="p">();</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>If you want to allocate dynamically, then we have to tell how much shared memory is needed during the kernel launch by specifying the third parameter.<br />
 <em>samplefunct&lt;&lt;&lt;32,32, shared_memory_in_bytes&gt;&gt;&gt;();</em></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">__global__</span> <span class="n">void</span> <span class="n">samplefunct</span><span class="p">(){</span>
-    <span class="n">__shared__</span> <span class="nb">int</span> <span class="n">A</span><span class="p">[];</span> <span class="o">//</span> <span class="n">maximum</span> <span class="n">of</span> <span class="n">shared_memory_in_bytes</span> <span class="n">of</span> <span class="n">memory</span> <span class="n">can</span> <span class="n">be</span> <span class="n">used</span><span class="o">.</span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">__global__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">samplefunct</span><span class="p">(){</span>
+<span class="w">   </span><span class="k">extern</span><span class="w"> </span><span class="n">__shared__</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">A</span><span class="p">[];</span><span class="w"> </span><span class="c1">// maximum of shared_memory_in_bytes of memory can be used.</span>
 <span class="p">}</span>
 
-<span class="nb">int</span> <span class="n">main</span><span class="p">(){</span>
-    <span class="nb">int</span> <span class="n">shared_memory_in_bytes</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">int</span><span class="p">);</span>
-    <span class="n">samplefunct</span><span class="o">&lt;&lt;&lt;</span><span class="mi">32</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span><span class="n">shared_memory_in_bytes</span><span class="o">&gt;&gt;&gt;</span><span class="p">();</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">shared_memory_in_bytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
+<span class="w">    </span><span class="n">samplefunct</span><span class="o">&lt;&lt;&lt;</span><span class="mi">32</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span><span class="n">shared_memory_in_bytes</span><span class="o">&gt;&gt;&gt;</span><span class="p">();</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>The is the code for matrix multiplication of A &amp; B, stores the result in C without using shared memory. This is a basic matrix multiplication algo where each thread computes the result corresponding to a certain index idy(row),idx(column). The thread loops over the row number idy of A and column number idx of B, multiples each element and finds the total sum.</p>
+<p>The below is the code for matrix multiplication of A &amp; B, stores the result in C without using shared memory. This is a basic matrix multiplication algo where each thread computes the result corresponding to a certain index idy(row),idx(column). The thread loops over the row number idy of A and column number idx of B, multiples each element and finds the total sum.</p>
 <p><img alt="img" src="_images/naive_multiplication.png" /></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#include &lt;stdio.h&gt;</span>
-<span class="c1">#include &lt;time.h&gt; // To calculate time</span>
+<p>To identify the row and column index of the thread. idy is the row number and idx is the column number.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="o">+</span><span class="n">blockDim</span><span class="p">.</span><span class="n">x</span><span class="o">*</span><span class="n">blockIdx</span><span class="p">.</span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="c1">// create thread x index</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">idy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">y</span><span class="o">+</span><span class="n">blockDim</span><span class="p">.</span><span class="n">y</span><span class="o">*</span><span class="n">blockIdx</span><span class="p">.</span><span class="n">y</span><span class="p">;</span><span class="w"> </span><span class="c1">// create thread y index</span>
+</pre></div>
+</div>
+<p>The below image might help you to understand the above.<br />
+<img alt="img" src="_images/row_col.png" /></p>
+<p>Regarding the A,B and C matrix index I am leaving it to you. Remember that each matrix are stored contiguously in the memory and have to be accessed via a single index.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;time.h&gt;</span><span class="c1"> // To calculate time</span>
 
-<span class="o">//</span> <span class="n">Cuda</span> <span class="n">error</span> <span class="n">check</span>
-<span class="n">void</span> <span class="n">cuda_check</span><span class="p">(</span><span class="n">cudaError_t</span> <span class="n">error</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">file</span><span class="p">,</span> <span class="nb">int</span> <span class="n">line</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">error</span> <span class="o">!=</span> <span class="n">cudaSuccess</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;[CUDA ERROR] at file </span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">:</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span>
-               <span class="n">cudaGetErrorString</span><span class="p">(</span><span class="n">error</span><span class="p">));</span>
-        <span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
-    <span class="p">}</span>
+<span class="c1">// Cuda error check</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">cuda_check</span><span class="p">(</span><span class="n">cudaError_t</span><span class="w"> </span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">file</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">line</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">error</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">cudaSuccess</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;[CUDA ERROR] at file %s:%d:</span><span class="se">\n</span><span class="s">%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">file</span><span class="p">,</span><span class="w"> </span><span class="n">line</span><span class="p">,</span>
+<span class="w">               </span><span class="n">cudaGetErrorString</span><span class="p">(</span><span class="n">error</span><span class="p">));</span>
+<span class="w">        </span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
-<span class="c1">#define cudaCheck(err) (cuda_check(err, __FILE__, __LINE__))</span>
+<span class="cp">#define cudaCheck(err) (cuda_check(err, __FILE__, __LINE__))</span>
 
 
-<span class="n">const</span> <span class="nb">int</span> <span class="n">DSIZE</span> <span class="o">=</span> <span class="mi">8192</span><span class="p">;</span>
-<span class="n">const</span> <span class="nb">int</span> <span class="n">block_size</span> <span class="o">=</span> <span class="mi">32</span><span class="p">;</span> 
-<span class="n">const</span> <span class="nb">float</span> <span class="n">A_val</span> <span class="o">=</span> <span class="mf">3.0</span><span class="n">f</span><span class="p">;</span>
-<span class="n">const</span> <span class="nb">float</span> <span class="n">B_val</span> <span class="o">=</span> <span class="mf">2.0</span><span class="n">f</span><span class="p">;</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">DSIZE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8192</span><span class="p">;</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">block_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span><span class="w"> </span>
+<span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">A_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3.0f</span><span class="p">;</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">B_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.0f</span><span class="p">;</span>
 
-<span class="o">//</span> <span class="n">Not</span> <span class="n">making</span> <span class="n">use</span> <span class="n">of</span> <span class="n">shared</span> <span class="n">memory</span><span class="p">,</span>  <span class="n">Naive</span> <span class="n">multiply</span>
-<span class="n">__global__</span> <span class="n">void</span> <span class="n">mmul</span><span class="p">(</span><span class="n">const</span> <span class="nb">float</span> <span class="o">*</span><span class="n">A</span><span class="p">,</span> <span class="n">const</span> <span class="nb">float</span> <span class="o">*</span><span class="n">B</span><span class="p">,</span> <span class="nb">float</span> <span class="o">*</span><span class="n">C</span><span class="p">,</span> <span class="nb">int</span> <span class="n">ds</span><span class="p">)</span> <span class="p">{</span>
+<span class="c1">// Not making use of shared memory,  Naive multiply</span>
+<span class="n">__global__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">mmul</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">C</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">ds</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 
-  <span class="nb">int</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">threadIdx</span><span class="o">.</span><span class="n">x</span><span class="o">+</span><span class="n">blockDim</span><span class="o">.</span><span class="n">x</span><span class="o">*</span><span class="n">blockIdx</span><span class="o">.</span><span class="n">x</span><span class="p">;</span> <span class="o">//</span> <span class="n">create</span> <span class="n">thread</span> <span class="n">x</span> <span class="n">index</span>
-  <span class="nb">int</span> <span class="n">idy</span> <span class="o">=</span> <span class="n">threadIdx</span><span class="o">.</span><span class="n">y</span><span class="o">+</span><span class="n">blockDim</span><span class="o">.</span><span class="n">y</span><span class="o">*</span><span class="n">blockIdx</span><span class="o">.</span><span class="n">y</span><span class="p">;</span> <span class="o">//</span> <span class="n">create</span> <span class="n">thread</span> <span class="n">y</span> <span class="n">index</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="o">+</span><span class="n">blockDim</span><span class="p">.</span><span class="n">x</span><span class="o">*</span><span class="n">blockIdx</span><span class="p">.</span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="c1">// create thread x index</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">idy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">y</span><span class="o">+</span><span class="n">blockDim</span><span class="p">.</span><span class="n">y</span><span class="o">*</span><span class="n">blockIdx</span><span class="p">.</span><span class="n">y</span><span class="p">;</span><span class="w"> </span><span class="c1">// create thread y index</span>
 
-  <span class="k">if</span> <span class="p">((</span><span class="n">idx</span> <span class="o">&lt;</span> <span class="n">ds</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">idy</span> <span class="o">&lt;</span> <span class="n">ds</span><span class="p">)){</span>
-    <span class="nb">float</span> <span class="n">temp</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">ds</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-      <span class="o">//</span> <span class="n">Keep</span> <span class="n">track</span> <span class="n">of</span> <span class="n">the</span> <span class="n">running</span> <span class="nb">sum</span>
-      	<span class="n">temp</span> <span class="o">+=</span> <span class="n">A</span><span class="p">[</span><span class="n">idy</span> <span class="o">*</span> <span class="n">ds</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">B</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="n">ds</span> <span class="o">+</span> <span class="n">idx</span><span class="p">];</span> <span class="o">//</span> <span class="n">dot</span> <span class="n">product</span> <span class="n">of</span> <span class="n">row</span> <span class="ow">and</span> <span class="n">column</span>
-    <span class="p">}</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">idx</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">ds</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">(</span><span class="n">idy</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">ds</span><span class="p">)){</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">ds</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="c1">// Keep track of the running sum</span>
+<span class="w">      	</span><span class="n">temp</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">A</span><span class="p">[</span><span class="n">idy</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">ds</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">ds</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">idx</span><span class="p">];</span><span class="w"> </span><span class="c1">// dot product of row and column</span>
+<span class="w">    </span><span class="p">}</span>
 
-    <span class="o">//</span> <span class="n">Write</span> <span class="n">to</span> <span class="k">global</span> <span class="n">memory</span>
-    <span class="n">C</span><span class="p">[</span><span class="n">idy</span><span class="o">*</span><span class="n">ds</span><span class="o">+</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span><span class="p">;</span>
-  <span class="p">}</span>
+<span class="w">    </span><span class="c1">// Write to global memory</span>
+<span class="w">    </span><span class="n">C</span><span class="p">[</span><span class="n">idy</span><span class="o">*</span><span class="n">ds</span><span class="o">+</span><span class="n">idx</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 
-<span class="nb">int</span> <span class="n">main</span><span class="p">(){</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">(){</span>
 
-  <span class="nb">float</span> <span class="o">*</span><span class="n">h_A</span><span class="p">,</span> <span class="o">*</span><span class="n">h_B</span><span class="p">,</span> <span class="o">*</span><span class="n">h_C</span><span class="p">,</span> <span class="o">*</span><span class="n">d_A</span><span class="p">,</span> <span class="o">*</span><span class="n">d_B</span><span class="p">,</span> <span class="o">*</span><span class="n">d_C</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">h_A</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">h_B</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">h_C</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">d_B</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">d_C</span><span class="p">;</span>
 
 
-  <span class="o">//</span> <span class="n">To</span> <span class="n">calculate</span> <span class="n">timings</span><span class="o">.</span>
-  <span class="n">clock_t</span> <span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">;</span>
-  <span class="n">double</span> <span class="n">t1sum</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
-  <span class="n">double</span> <span class="n">t2sum</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// To calculate timings.</span>
+<span class="w">  </span><span class="kt">clock_t</span><span class="w"> </span><span class="n">t0</span><span class="p">,</span><span class="w"> </span><span class="n">t1</span><span class="p">,</span><span class="w"> </span><span class="n">t2</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">t1sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">t2sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
 
-  <span class="o">//</span> <span class="n">clock</span> <span class="n">start</span>
-  <span class="n">t0</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+<span class="w">  </span><span class="c1">// clock start</span>
+<span class="w">  </span><span class="n">t0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clock</span><span class="p">();</span>
 
-  <span class="n">h_A</span> <span class="o">=</span> <span class="n">new</span> <span class="nb">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
-  <span class="n">h_B</span> <span class="o">=</span> <span class="n">new</span> <span class="nb">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
-  <span class="n">h_C</span> <span class="o">=</span> <span class="n">new</span> <span class="nb">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
+<span class="w">  </span><span class="n">h_A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
+<span class="w">  </span><span class="n">h_B</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
+<span class="w">  </span><span class="n">h_C</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
 
-  <span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
-    <span class="n">h_A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">A_val</span><span class="p">;</span>
-    <span class="n">h_B</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">B_val</span><span class="p">;</span>
-    <span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;}</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">    </span><span class="n">h_A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A_val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">h_B</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">B_val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;}</span>
 
-  <span class="o">//</span> <span class="n">Initialization</span> <span class="n">timing</span>
-  <span class="n">t1</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
-  
-  <span class="n">t1sum</span> <span class="o">=</span> <span class="p">((</span><span class="n">double</span><span class="p">)(</span><span class="n">t1</span><span class="o">-</span><span class="n">t0</span><span class="p">))</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="p">;</span>
-  <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;Init took </span><span class="si">%f</span><span class="s2"> seconds.  Begin compute</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">t1sum</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">// Initialization timing</span>
+<span class="w">  </span><span class="n">t1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clock</span><span class="p">();</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="n">t1sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="kt">double</span><span class="p">)(</span><span class="n">t1</span><span class="o">-</span><span class="n">t0</span><span class="p">))</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="p">;</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Init took %f seconds.  Begin compute</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">t1sum</span><span class="p">);</span>
 
-  <span class="o">//</span> <span class="n">Allocate</span> <span class="n">device</span> <span class="n">memory</span>
-  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">)));</span>
-  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_B</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">)));</span>
-  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_C</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">)));</span>
+<span class="w">  </span><span class="c1">// Allocate device memory</span>
+<span class="w">  </span><span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">float</span><span class="p">)));</span>
+<span class="w">  </span><span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_B</span><span class="p">,</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">float</span><span class="p">)));</span>
+<span class="w">  </span><span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">float</span><span class="p">)));</span>
 
-  <span class="o">//</span> <span class="n">copy</span> <span class="nb">input</span> <span class="n">data</span> <span class="n">over</span> <span class="n">to</span> <span class="n">GPU</span>
-  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span> <span class="n">h_A</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span> <span class="n">cudaMemcpyHostToDevice</span><span class="p">));</span>
-  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_B</span><span class="p">,</span> <span class="n">h_B</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span> <span class="n">cudaMemcpyHostToDevice</span><span class="p">));</span>
-  
+<span class="w">  </span><span class="c1">// copy input data over to GPU</span>
+<span class="w">  </span><span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="n">h_A</span><span class="p">,</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">float</span><span class="p">),</span><span class="w"> </span><span class="n">cudaMemcpyHostToDevice</span><span class="p">));</span>
+<span class="w">  </span><span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_B</span><span class="p">,</span><span class="w"> </span><span class="n">h_B</span><span class="p">,</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">float</span><span class="p">),</span><span class="w"> </span><span class="n">cudaMemcpyHostToDevice</span><span class="p">));</span>
+<span class="w">  </span>
 
-  
-  <span class="n">dim3</span> <span class="n">block</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="n">block_size</span><span class="p">);</span> 
-  <span class="n">dim3</span> <span class="n">grid</span><span class="p">((</span><span class="n">DSIZE</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">block</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">DSIZE</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">block</span><span class="o">.</span><span class="n">y</span><span class="p">);</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="n">dim3</span><span class="w"> </span><span class="nf">block</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span><span class="w"> </span><span class="n">block_size</span><span class="p">);</span><span class="w"> </span>
+<span class="w">  </span><span class="n">dim3</span><span class="w"> </span><span class="n">grid</span><span class="p">((</span><span class="n">DSIZE</span><span class="o">+</span><span class="n">block</span><span class="p">.</span><span class="n">x</span><span class="mi">-1</span><span class="p">)</span><span class="o">/</span><span class="n">block</span><span class="p">.</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">DSIZE</span><span class="o">+</span><span class="n">block</span><span class="p">.</span><span class="n">y</span><span class="mi">-1</span><span class="p">)</span><span class="o">/</span><span class="n">block</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
 
-  <span class="o">//</span> <span class="n">Launch</span> <span class="n">kernel</span>
-  <span class="n">mmul</span><span class="o">&lt;&lt;&lt;</span><span class="n">grid</span><span class="p">,</span> <span class="n">block</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span> <span class="n">d_B</span><span class="p">,</span> <span class="n">d_C</span><span class="p">,</span> <span class="n">DSIZE</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">// Launch kernel</span>
+<span class="w">  </span><span class="n">mmul</span><span class="o">&lt;&lt;&lt;</span><span class="n">grid</span><span class="p">,</span><span class="w"> </span><span class="n">block</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="n">d_B</span><span class="p">,</span><span class="w"> </span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="n">DSIZE</span><span class="p">);</span>
 
-  <span class="o">//</span> <span class="n">Copy</span> <span class="n">results</span> <span class="n">back</span> <span class="n">to</span> <span class="n">host</span>
-  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">h_C</span><span class="p">,</span> <span class="n">d_C</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span> <span class="n">cudaMemcpyDeviceToHost</span><span class="p">));</span>
+<span class="w">  </span><span class="c1">// Copy results back to host</span>
+<span class="w">  </span><span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">h_C</span><span class="p">,</span><span class="w"> </span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">float</span><span class="p">),</span><span class="w"> </span><span class="n">cudaMemcpyDeviceToHost</span><span class="p">));</span>
 
-  <span class="o">//</span> <span class="n">GPU</span> <span class="n">timing</span>
-  <span class="n">t2</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
-  <span class="n">t2sum</span> <span class="o">=</span> <span class="p">((</span><span class="n">double</span><span class="p">)(</span><span class="n">t2</span><span class="o">-</span><span class="n">t1</span><span class="p">))</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="p">;</span>
-  <span class="n">printf</span> <span class="p">(</span><span class="s2">&quot;Done. Compute took </span><span class="si">%f</span><span class="s2"> seconds</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">t2sum</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">// GPU timing</span>
+<span class="w">  </span><span class="n">t2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clock</span><span class="p">();</span>
+<span class="w">  </span><span class="n">t2sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="kt">double</span><span class="p">)(</span><span class="n">t2</span><span class="o">-</span><span class="n">t1</span><span class="p">))</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="p">;</span>
+<span class="w">  </span><span class="n">printf</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;Done. Compute took %f seconds</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">t2sum</span><span class="p">);</span>
 
-  <span class="o">//</span> <span class="n">validate</span> <span class="n">the</span> <span class="n">results</span>
-  <span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">A_val</span><span class="o">*</span><span class="n">B_val</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">)</span> <span class="p">{</span><span class="n">printf</span><span class="p">(</span><span class="s2">&quot;mismatch at index </span><span class="si">%d</span><span class="s2">, was: </span><span class="si">%f</span><span class="s2">, should be: </span><span class="si">%f</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">A_val</span><span class="o">*</span><span class="n">B_val</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">);</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;}</span>
-  <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;Success!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">);</span> 
-  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// validate the results</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">A_val</span><span class="o">*</span><span class="n">B_val</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;mismatch at index %d, was: %f, should be: %f</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">A_val</span><span class="o">*</span><span class="n">B_val</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">);</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;}</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Success!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="w"> </span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
-  
+<span class="w">  </span>
 </pre></div>
 </div>
 <p>Code Ouput:</p>
@@ -654,118 +675,118 @@ Assume that a thread block size is (3,3). Three threads in x direction and 3 thr
 </pre></div>
 </div>
 <p>Here is the Code,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#include &lt;stdio.h&gt;</span>
-<span class="c1">#include &lt;time.h&gt; // To calculate time</span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;time.h&gt;</span><span class="c1"> // To calculate time</span>
 
-<span class="o">//</span> <span class="n">Cuda</span> <span class="n">error</span> <span class="n">check</span>
-<span class="n">void</span> <span class="n">cuda_check</span><span class="p">(</span><span class="n">cudaError_t</span> <span class="n">error</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">file</span><span class="p">,</span> <span class="nb">int</span> <span class="n">line</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">error</span> <span class="o">!=</span> <span class="n">cudaSuccess</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;[CUDA ERROR] at file </span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">:</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span>
-               <span class="n">cudaGetErrorString</span><span class="p">(</span><span class="n">error</span><span class="p">));</span>
-        <span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
-    <span class="p">}</span>
+<span class="c1">// Cuda error check</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">cuda_check</span><span class="p">(</span><span class="n">cudaError_t</span><span class="w"> </span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">file</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">line</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">error</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">cudaSuccess</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;[CUDA ERROR] at file %s:%d:</span><span class="se">\n</span><span class="s">%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">file</span><span class="p">,</span><span class="w"> </span><span class="n">line</span><span class="p">,</span>
+<span class="w">               </span><span class="n">cudaGetErrorString</span><span class="p">(</span><span class="n">error</span><span class="p">));</span>
+<span class="w">        </span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
-<span class="c1">#define cudaCheck(err) (cuda_check(err, __FILE__, __LINE__))</span>
+<span class="cp">#define cudaCheck(err) (cuda_check(err, __FILE__, __LINE__))</span>
 
 
-<span class="n">const</span> <span class="nb">int</span> <span class="n">DSIZE</span> <span class="o">=</span> <span class="mi">8192</span><span class="p">;</span>
-<span class="n">const</span> <span class="nb">int</span> <span class="n">block_size</span> <span class="o">=</span> <span class="mi">32</span><span class="p">;</span>  <span class="o">//</span> <span class="n">CUDA</span> <span class="n">maximum</span> <span class="ow">is</span> <span class="mi">1024</span> <span class="o">*</span><span class="n">total</span><span class="o">*</span> <span class="n">threads</span> <span class="ow">in</span> <span class="n">block</span>
-<span class="n">const</span> <span class="nb">float</span> <span class="n">A_val</span> <span class="o">=</span> <span class="mf">3.0</span><span class="n">f</span><span class="p">;</span>
-<span class="n">const</span> <span class="nb">float</span> <span class="n">B_val</span> <span class="o">=</span> <span class="mf">2.0</span><span class="n">f</span><span class="p">;</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">DSIZE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8192</span><span class="p">;</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">block_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span><span class="w">  </span><span class="c1">// CUDA maximum is 1024 *total* threads in block</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">A_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3.0f</span><span class="p">;</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">B_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.0f</span><span class="p">;</span>
 
-<span class="o">//</span> <span class="n">Making</span> <span class="n">use</span> <span class="n">of</span> <span class="n">shared</span> <span class="n">memory</span>
-<span class="n">__global__</span> <span class="n">void</span> <span class="n">mmul</span><span class="p">(</span><span class="n">const</span> <span class="nb">float</span> <span class="o">*</span><span class="n">A</span><span class="p">,</span> <span class="n">const</span> <span class="nb">float</span> <span class="o">*</span><span class="n">B</span><span class="p">,</span> <span class="nb">float</span> <span class="o">*</span><span class="n">C</span><span class="p">,</span> <span class="nb">int</span> <span class="n">ds</span><span class="p">)</span> <span class="p">{</span>
+<span class="c1">// Making use of shared memory</span>
+<span class="n">__global__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">mmul</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">C</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">ds</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 
-  <span class="o">//</span> <span class="n">declare</span> <span class="n">cache</span> <span class="ow">in</span> <span class="n">shared</span> <span class="n">memory</span>
-  <span class="n">__shared__</span> <span class="nb">float</span> <span class="n">As</span><span class="p">[</span><span class="n">block_size</span><span class="p">][</span><span class="n">block_size</span><span class="p">];</span>
-  <span class="n">__shared__</span> <span class="nb">float</span> <span class="n">Bs</span><span class="p">[</span><span class="n">block_size</span><span class="p">][</span><span class="n">block_size</span><span class="p">];</span>
+<span class="w">  </span><span class="c1">// declare cache in shared memory</span>
+<span class="w">  </span><span class="n">__shared__</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">As</span><span class="p">[</span><span class="n">block_size</span><span class="p">][</span><span class="n">block_size</span><span class="p">];</span>
+<span class="w">  </span><span class="n">__shared__</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">Bs</span><span class="p">[</span><span class="n">block_size</span><span class="p">][</span><span class="n">block_size</span><span class="p">];</span>
 
-  <span class="nb">int</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">threadIdx</span><span class="o">.</span><span class="n">x</span><span class="o">+</span><span class="n">blockDim</span><span class="o">.</span><span class="n">x</span><span class="o">*</span><span class="n">blockIdx</span><span class="o">.</span><span class="n">x</span><span class="p">;</span> <span class="o">//</span> <span class="n">create</span> <span class="n">thread</span> <span class="n">x</span> <span class="n">index</span>
-  <span class="nb">int</span> <span class="n">idy</span> <span class="o">=</span> <span class="n">threadIdx</span><span class="o">.</span><span class="n">y</span><span class="o">+</span><span class="n">blockDim</span><span class="o">.</span><span class="n">y</span><span class="o">*</span><span class="n">blockIdx</span><span class="o">.</span><span class="n">y</span><span class="p">;</span> <span class="o">//</span> <span class="n">create</span> <span class="n">thread</span> <span class="n">y</span> <span class="n">index</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="o">+</span><span class="n">blockDim</span><span class="p">.</span><span class="n">x</span><span class="o">*</span><span class="n">blockIdx</span><span class="p">.</span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="c1">// create thread x index</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">idy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">y</span><span class="o">+</span><span class="n">blockDim</span><span class="p">.</span><span class="n">y</span><span class="o">*</span><span class="n">blockIdx</span><span class="p">.</span><span class="n">y</span><span class="p">;</span><span class="w"> </span><span class="c1">// create thread y index</span>
 
-  <span class="k">if</span> <span class="p">((</span><span class="n">idx</span> <span class="o">&lt;</span> <span class="n">ds</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">idy</span> <span class="o">&lt;</span> <span class="n">ds</span><span class="p">)){</span>
-    <span class="nb">float</span> <span class="n">temp</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">ds</span><span class="o">/</span><span class="n">block_size</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">idx</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">ds</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">(</span><span class="n">idy</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">ds</span><span class="p">)){</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">ds</span><span class="o">/</span><span class="n">block_size</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 
-      <span class="o">//</span> <span class="n">Load</span> <span class="n">data</span> <span class="n">into</span> <span class="n">shared</span> <span class="n">memory</span>
-      <span class="n">As</span><span class="p">[</span><span class="n">threadIdx</span><span class="o">.</span><span class="n">y</span><span class="p">][</span><span class="n">threadIdx</span><span class="o">.</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">idy</span> <span class="o">*</span> <span class="n">ds</span> <span class="o">+</span> <span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="n">block_size</span> <span class="o">+</span> <span class="n">threadIdx</span><span class="o">.</span><span class="n">x</span><span class="p">)];</span>
-      <span class="n">Bs</span><span class="p">[</span><span class="n">threadIdx</span><span class="o">.</span><span class="n">y</span><span class="p">][</span><span class="n">threadIdx</span><span class="o">.</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">B</span><span class="p">[(</span><span class="n">i</span> <span class="o">*</span> <span class="n">block_size</span> <span class="o">+</span> <span class="n">threadIdx</span><span class="o">.</span><span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">ds</span> <span class="o">+</span> <span class="n">idx</span><span class="p">];</span>
+<span class="w">      </span><span class="c1">// Load data into shared memory</span>
+<span class="w">      </span><span class="n">As</span><span class="p">[</span><span class="n">threadIdx</span><span class="p">.</span><span class="n">y</span><span class="p">][</span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A</span><span class="p">[</span><span class="n">idy</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">ds</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">block_size</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="p">)];</span>
+<span class="w">      </span><span class="n">Bs</span><span class="p">[</span><span class="n">threadIdx</span><span class="p">.</span><span class="n">y</span><span class="p">][</span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">B</span><span class="p">[(</span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">block_size</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">ds</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">idx</span><span class="p">];</span>
 
-      <span class="o">//</span> <span class="n">Synchronize</span>
-      <span class="n">__syncthreads</span><span class="p">();</span>
+<span class="w">      </span><span class="c1">// Synchronize</span>
+<span class="w">      </span><span class="n">__syncthreads</span><span class="p">();</span>
 
-      <span class="o">//</span> <span class="n">Keep</span> <span class="n">track</span> <span class="n">of</span> <span class="n">the</span> <span class="n">running</span> <span class="nb">sum</span>
-      <span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">block_size</span><span class="p">;</span> <span class="n">k</span><span class="o">++</span><span class="p">)</span>
-      	<span class="n">temp</span> <span class="o">+=</span> <span class="n">As</span><span class="p">[</span><span class="n">threadIdx</span><span class="o">.</span><span class="n">y</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">Bs</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">threadIdx</span><span class="o">.</span><span class="n">x</span><span class="p">];</span> <span class="o">//</span> <span class="n">dot</span> <span class="n">product</span> <span class="n">of</span> <span class="n">row</span> <span class="ow">and</span> <span class="n">column</span>
-      <span class="n">__syncthreads</span><span class="p">();</span>
+<span class="w">      </span><span class="c1">// Keep track of the running sum</span>
+<span class="w">      </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">block_size</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="o">++</span><span class="p">)</span>
+<span class="w">      	</span><span class="n">temp</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">As</span><span class="p">[</span><span class="n">threadIdx</span><span class="p">.</span><span class="n">y</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">Bs</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="p">];</span><span class="w"> </span><span class="c1">// dot product of row and column</span>
+<span class="w">      </span><span class="n">__syncthreads</span><span class="p">();</span>
 
-    <span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
 
-    <span class="o">//</span> <span class="n">Write</span> <span class="n">to</span> <span class="k">global</span> <span class="n">memory</span>
-    <span class="n">C</span><span class="p">[</span><span class="n">idy</span><span class="o">*</span><span class="n">ds</span><span class="o">+</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span><span class="p">;</span>
-  <span class="p">}</span>
+<span class="w">    </span><span class="c1">// Write to global memory</span>
+<span class="w">    </span><span class="n">C</span><span class="p">[</span><span class="n">idy</span><span class="o">*</span><span class="n">ds</span><span class="o">+</span><span class="n">idx</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 
 
-<span class="nb">int</span> <span class="n">main</span><span class="p">(){</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">(){</span>
 
-  <span class="nb">float</span> <span class="o">*</span><span class="n">h_A</span><span class="p">,</span> <span class="o">*</span><span class="n">h_B</span><span class="p">,</span> <span class="o">*</span><span class="n">h_C</span><span class="p">,</span> <span class="o">*</span><span class="n">d_A</span><span class="p">,</span> <span class="o">*</span><span class="n">d_B</span><span class="p">,</span> <span class="o">*</span><span class="n">d_C</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">h_A</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">h_B</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">h_C</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">d_B</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">d_C</span><span class="p">;</span>
 
 
-  <span class="o">//</span> <span class="n">To</span> <span class="n">calculate</span> <span class="n">timings</span><span class="o">.</span>
-  <span class="n">clock_t</span> <span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">;</span>
-  <span class="n">double</span> <span class="n">t1sum</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
-  <span class="n">double</span> <span class="n">t2sum</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// To calculate timings.</span>
+<span class="w">  </span><span class="kt">clock_t</span><span class="w"> </span><span class="n">t0</span><span class="p">,</span><span class="w"> </span><span class="n">t1</span><span class="p">,</span><span class="w"> </span><span class="n">t2</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">t1sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">t2sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
 
-  <span class="o">//</span> <span class="n">clock</span> <span class="n">start</span>
-  <span class="n">t0</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+<span class="w">  </span><span class="c1">// clock start</span>
+<span class="w">  </span><span class="n">t0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clock</span><span class="p">();</span>
 
-  <span class="n">h_A</span> <span class="o">=</span> <span class="n">new</span> <span class="nb">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
-  <span class="n">h_B</span> <span class="o">=</span> <span class="n">new</span> <span class="nb">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
-  <span class="n">h_C</span> <span class="o">=</span> <span class="n">new</span> <span class="nb">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
+<span class="w">  </span><span class="n">h_A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
+<span class="w">  </span><span class="n">h_B</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
+<span class="w">  </span><span class="n">h_C</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">float</span><span class="p">[</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">];</span>
 
-  <span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
-    <span class="n">h_A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">A_val</span><span class="p">;</span>
-    <span class="n">h_B</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">B_val</span><span class="p">;</span>
-    <span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;}</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">    </span><span class="n">h_A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A_val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">h_B</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">B_val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;}</span>
 
-  <span class="o">//</span> <span class="n">Initialization</span> <span class="n">timing</span>
-  <span class="n">t1</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
-  
-  <span class="n">t1sum</span> <span class="o">=</span> <span class="p">((</span><span class="n">double</span><span class="p">)(</span><span class="n">t1</span><span class="o">-</span><span class="n">t0</span><span class="p">))</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="p">;</span>
-  <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;Init took </span><span class="si">%f</span><span class="s2"> seconds.  Begin compute</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">t1sum</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">// Initialization timing</span>
+<span class="w">  </span><span class="n">t1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clock</span><span class="p">();</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="n">t1sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="kt">double</span><span class="p">)(</span><span class="n">t1</span><span class="o">-</span><span class="n">t0</span><span class="p">))</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="p">;</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Init took %f seconds.  Begin compute</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">t1sum</span><span class="p">);</span>
 
-  <span class="o">//</span> <span class="n">Allocate</span> <span class="n">device</span> <span class="n">memory</span>
-  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">)));</span>
-  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_B</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">)));</span>
-  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_C</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">)));</span>
+<span class="w">  </span><span class="c1">// Allocate device memory</span>
+<span class="w">  </span><span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">float</span><span class="p">)));</span>
+<span class="w">  </span><span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_B</span><span class="p">,</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">float</span><span class="p">)));</span>
+<span class="w">  </span><span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">float</span><span class="p">)));</span>
 
-  <span class="o">//</span> <span class="n">copy</span> <span class="nb">input</span> <span class="n">data</span> <span class="n">over</span> <span class="n">to</span> <span class="n">GPU</span>
-  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span> <span class="n">h_A</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span> <span class="n">cudaMemcpyHostToDevice</span><span class="p">));</span>
-  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_B</span><span class="p">,</span> <span class="n">h_B</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span> <span class="n">cudaMemcpyHostToDevice</span><span class="p">));</span>
-  
+<span class="w">  </span><span class="c1">// copy input data over to GPU</span>
+<span class="w">  </span><span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="n">h_A</span><span class="p">,</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">float</span><span class="p">),</span><span class="w"> </span><span class="n">cudaMemcpyHostToDevice</span><span class="p">));</span>
+<span class="w">  </span><span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_B</span><span class="p">,</span><span class="w"> </span><span class="n">h_B</span><span class="p">,</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">float</span><span class="p">),</span><span class="w"> </span><span class="n">cudaMemcpyHostToDevice</span><span class="p">));</span>
+<span class="w">  </span>
 
-  
-  <span class="n">dim3</span> <span class="n">block</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="n">block_size</span><span class="p">);</span> 
-  <span class="n">dim3</span> <span class="n">grid</span><span class="p">((</span><span class="n">DSIZE</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">block</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">DSIZE</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">block</span><span class="o">.</span><span class="n">y</span><span class="p">);</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="n">dim3</span><span class="w"> </span><span class="nf">block</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span><span class="w"> </span><span class="n">block_size</span><span class="p">);</span><span class="w"> </span>
+<span class="w">  </span><span class="n">dim3</span><span class="w"> </span><span class="n">grid</span><span class="p">((</span><span class="n">DSIZE</span><span class="o">+</span><span class="n">block</span><span class="p">.</span><span class="n">x</span><span class="mi">-1</span><span class="p">)</span><span class="o">/</span><span class="n">block</span><span class="p">.</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">DSIZE</span><span class="o">+</span><span class="n">block</span><span class="p">.</span><span class="n">y</span><span class="mi">-1</span><span class="p">)</span><span class="o">/</span><span class="n">block</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
 
-  <span class="o">//</span> <span class="n">Launch</span> <span class="n">kernel</span>
-  <span class="n">mmul</span><span class="o">&lt;&lt;&lt;</span><span class="n">grid</span><span class="p">,</span> <span class="n">block</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span> <span class="n">d_B</span><span class="p">,</span> <span class="n">d_C</span><span class="p">,</span> <span class="n">DSIZE</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">// Launch kernel</span>
+<span class="w">  </span><span class="n">mmul</span><span class="o">&lt;&lt;&lt;</span><span class="n">grid</span><span class="p">,</span><span class="w"> </span><span class="n">block</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="n">d_B</span><span class="p">,</span><span class="w"> </span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="n">DSIZE</span><span class="p">);</span>
 
-  <span class="o">//</span> <span class="n">Copy</span> <span class="n">results</span> <span class="n">back</span> <span class="n">to</span> <span class="n">host</span>
-  <span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">h_C</span><span class="p">,</span> <span class="n">d_C</span><span class="p">,</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="n">sizeof</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span> <span class="n">cudaMemcpyDeviceToHost</span><span class="p">));</span>
+<span class="w">  </span><span class="c1">// Copy results back to host</span>
+<span class="w">  </span><span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">h_C</span><span class="p">,</span><span class="w"> </span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">float</span><span class="p">),</span><span class="w"> </span><span class="n">cudaMemcpyDeviceToHost</span><span class="p">));</span>
 
-  <span class="o">//</span> <span class="n">GPU</span> <span class="n">timing</span>
-  <span class="n">t2</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
-  <span class="n">t2sum</span> <span class="o">=</span> <span class="p">((</span><span class="n">double</span><span class="p">)(</span><span class="n">t2</span><span class="o">-</span><span class="n">t1</span><span class="p">))</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="p">;</span>
-  <span class="n">printf</span> <span class="p">(</span><span class="s2">&quot;Done. Compute took </span><span class="si">%f</span><span class="s2"> seconds</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">t2sum</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">// GPU timing</span>
+<span class="w">  </span><span class="n">t2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clock</span><span class="p">();</span>
+<span class="w">  </span><span class="n">t2sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="kt">double</span><span class="p">)(</span><span class="n">t2</span><span class="o">-</span><span class="n">t1</span><span class="p">))</span><span class="o">/</span><span class="n">CLOCKS_PER_SEC</span><span class="p">;</span>
+<span class="w">  </span><span class="n">printf</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;Done. Compute took %f seconds</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">t2sum</span><span class="p">);</span>
 
-  <span class="o">//</span> <span class="n">validate</span> <span class="n">the</span> <span class="n">results</span>
-  <span class="k">for</span> <span class="p">(</span><span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">A_val</span><span class="o">*</span><span class="n">B_val</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">)</span> <span class="p">{</span><span class="n">printf</span><span class="p">(</span><span class="s2">&quot;mismatch at index </span><span class="si">%d</span><span class="s2">, was: </span><span class="si">%f</span><span class="s2">, should be: </span><span class="si">%f</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">A_val</span><span class="o">*</span><span class="n">B_val</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">);</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;}</span>
-  <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;Success!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">);</span> 
-  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// validate the results</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">DSIZE</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">A_val</span><span class="o">*</span><span class="n">B_val</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;mismatch at index %d, was: %f, should be: %f</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">A_val</span><span class="o">*</span><span class="n">B_val</span><span class="o">*</span><span class="n">DSIZE</span><span class="p">);</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;}</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Success!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="w"> </span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
-  
+<span class="w">  </span>
 </pre></div>
 </div>
 <p>Output:</p>
@@ -779,6 +800,9 @@ I am using 1060 Ti, I know its old. I am GPU poor.</p>
 </section>
 <section id="more-about-shared-memory">
 <h2>More About Shared Memory<a class="headerlink" href="#more-about-shared-memory" title="Link to this heading">#</a></h2>
+<p>cudasync()_
+total threads, blocks etc info.
+code to handle if array size &gt; total threads.</p>
 </section>
 </section>
 
@@ -821,6 +845,15 @@ I am using 1060 Ti, I know its old. I am GPU poor.</p>
         <p class="prev-next-title">Getting Started: Cuda C++</p>
       </div>
     </a>
+    <a class="right-next"
+       href="03-flash-attention-I.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Flash Attention - I</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -839,8 +872,14 @@ I am using 1060 Ti, I know its old. I am GPU poor.</p>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wrap-and-wrap-scheduler">Wrap And Wrap Scheduler</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#types-of-memories">Types of Memories</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-coalesing-matters">Why coalesing matters?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#types-of-memories">Types of Memories</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#little-bit-about-l1-l2-and-global-memory-working">Little bit about L1, L2 and global memory working</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-coalesing-matters">Why coalesing matters?</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#some-optimization-tips-to-achieve-maximum-efficiency">Some optimization tips to achieve maximum efficiency.</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#shared-memory">Shared Memory</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#more-about-shared-memory">More About Shared Memory</a></li>
 </ul>

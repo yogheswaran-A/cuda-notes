@@ -22,7 +22,7 @@ For programming purpose it is majorly enough as far I have seen to know about th
 
 1) **Global Memory**: This like the DRAM. All the threads from all the SM's have access to this memory. When a thread accesses this memory, the processing time is large. So this is a costly operation.  
 
-```
+```c++
 __global__ void vector_add(int *A,int *B,int *C,int n){
     ...
 }
@@ -52,7 +52,7 @@ As you can see the global memory is accessed many times, which is a costly opera
 
 *cycle 3*: Thread 2 tries to acccess A[0]. The data is in shared memory, thread 2 reads from it. Now Thread 2 adds 1 to it, stores it in the shared memory.   
 
-**Little bit about L1, L2 and global memory working**      
+### Little bit about L1, L2 and global memory working      
 Suppose we launch a kernel with 32 threads and 2 thread blocks. Initially L1 and L2 caches are clear. Suppose Thread 0 from block 0 access A[0] from global memory. Since L2 does not have it, the data will be stored in L2 and in L1(L1 of the thread block 0). If in the next cycle if thread 0 from block 1 accesses A[0] since it is present in the L2 cache it will read from it and also cache the data in the L1 cache of its thread block.   
 
 Figure depicting the different types of Memories. Please note that the numbers provided in th fig below are only to give an idea about the realtive memory capacity and speed. 
@@ -93,7 +93,7 @@ In this scenario we get bus utilization of 4%. And total time taken is 4 clock c
 
 Scenario 5 is why coalesing matters. A warp should access within a contiguous region, ie consecutive threads accessing consecutive memory addresses. 
 
-**Some optimization tips to achieve maximum efficiency.**   
+### Some optimization tips to achieve maximum efficiency.
 ```
 1) Strive for perfect coalescing
     (Align starting address - may require padding)    
@@ -118,7 +118,7 @@ We know what a shared memomry is, we will see how to utilise it by writing a pro
 
 *\_\_shared\_\_* keyword allows us to allocate and use the shared memory. 
 
-```
+```c++
 __global__ void samplefunct(){
     __shared__ int A[10];
 }
@@ -129,7 +129,7 @@ int main(){
 ```  
 In the above code sizeof(int)*10 bytes of shared memomry is reserved for each thread block. 32 threads of a particular thread block share this memory.  
 Note that when declaring the shared memory it is absolutely neccessary to define how much memory is to be allocated. For example the below is not valid.
-```
+```c++
 __global__ void samplefunct(){
     __shared__ int A[];
 }
@@ -142,9 +142,9 @@ int main(){
 If you want to allocate dynamically, then we have to tell how much shared memory is needed during the kernel launch by specifying the third parameter.  
 *samplefunct<<<32,32, shared_memory_in_bytes>>>();*   
 
-```
+```c++
 __global__ void samplefunct(){
-    __shared__ int A[]; // maximum of shared_memory_in_bytes of memory can be used.
+   extern __shared__ int A[]; // maximum of shared_memory_in_bytes of memory can be used.
 }
 
 int main(){
@@ -153,12 +153,22 @@ int main(){
 }
 ```
 
-The is the code for matrix multiplication of A & B, stores the result in C without using shared memory. This is a basic matrix multiplication algo where each thread computes the result corresponding to a certain index idy(row),idx(column). The thread loops over the row number idy of A and column number idx of B, multiples each element and finds the total sum.   
+The below is the code for matrix multiplication of A & B, stores the result in C without using shared memory. This is a basic matrix multiplication algo where each thread computes the result corresponding to a certain index idy(row),idx(column). The thread loops over the row number idy of A and column number idx of B, multiples each element and finds the total sum.   
 
 ![img](./data/img/02-instruction-dispatch/naive_multiplication.png)   
 
-
+To identify the row and column index of the thread. idy is the row number and idx is the column number.
+```c++
+  int idx = threadIdx.x+blockDim.x*blockIdx.x; // create thread x index
+  int idy = threadIdx.y+blockDim.y*blockIdx.y; // create thread y index
 ```
+
+The below image might help you to understand the above.    
+![img](./data/img/02-instruction-dispatch/row_col.png)   
+
+Regarding the A,B and C matrix index I am leaving it to you. Remember that each matrix are stored contiguously in the memory and have to be accessed via a single index.   
+
+```c++
 #include <stdio.h>
 #include <time.h> // To calculate time
 
@@ -312,7 +322,7 @@ In the inner loop accumulate the sum of multiplication of A_shared and B_shared.
 ```
 
 Here is the Code,
-```
+```c++
 #include <stdio.h>
 #include <time.h> // To calculate time
 
@@ -437,4 +447,8 @@ Success!
 **The time went down from 16.642000 seconds to 3.454000 seconds. This is 79.2% reduction in time!!!**    
 I am using 1060 Ti, I know its old. I am GPU poor.   
 
+
 ## More About Shared Memory 
+cudasync()_
+total threads, blocks etc info. 
+code to handle if array size > total threads.

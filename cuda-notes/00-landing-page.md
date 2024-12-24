@@ -3,6 +3,10 @@
 ![img](./data/img/landing_page_cuda.jpg)
 
 ```{note}
+This is a first draft. There are a lot of grammatical mistakes, which will be corrected soon.
+```
+
+```{note}
 Please note that I am not a subject matter expertise, whatever is written here is yet to be verified by someone is. These are my personal notes. 
 ```
 

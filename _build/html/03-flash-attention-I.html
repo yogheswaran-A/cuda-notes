@@ -1,0 +1,1130 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Flash Attention - I &#8212; Cuda C++: Crawling, Walking and Running</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '03-flash-attention-I';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Flash Attention - II" href="04-flash-attention-II.html" />
+    <link rel="prev" title="Instruction Dispatch and Memory" href="02-instruction-dispatch-and-memory.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="00-landing-page.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Cuda C++: Crawling, Walking and Running</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="00-landing-page.html">
+                    Cuda C++: Crawling, Walking And Running
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="01-getting-started.html">Getting Started: Cuda C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02-instruction-dispatch-and-memory.html">Instruction Dispatch and Memory</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Flash Attention - I</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04-flash-attention-II.html">Flash Attention - II</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/yogheswaran-a/cudanotes" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/yogheswaran-a/cudanotes/issues/new?title=Issue%20on%20page%20%2F03-flash-attention-I.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/03-flash-attention-I.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Flash Attention - I</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cublas">CuBLAS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#some-functions-and-classes-to-know">Some Functions and Classes To Know</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cudasetdevice">cudaSetDevice()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cudagetdeviceproperties">cudaGetDeviceProperties()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-up-cublas">Setting up cuBLAS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cublas-error">CuBLAS Error</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cublassgemmstridedbatched-in-cuda"><code class="docutils literal notranslate"><span class="pre">cublasSgemmStridedBatched</span></code> in CUDA</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#function-prototype">Function Prototype</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#finding-maximum-and-sum-of-an-array">Finding Maximum And Sum Of An Array.</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lets-write-a-program-to-find-the-max-within-an-array-of-size-32-wrap-size">Lets write a program to find the max within an array of size = 32(wrap size).</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lets-write-a-program-to-find-the-max-within-an-array-whose-size-is-a-power-of-2-and-greater-31">Lets write a program to find the max within an array whose size is a power of 2 and greater 31.</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#finding-the-row-maximum-of-a-n-c-dimesnion-array-n-is-a-power-of-2-and-greater-than-31">Finding the row maximum of a (N,C) dimesnion array. N is a power of 2 and greater than 31.</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#finding-the-row-sum-of-a-n-c-dimesnion-array-n-is-a-power-of-2-and-greater-than-31">Finding the row sum of a (N,C) dimesnion array. N is a power of 2 and greater than 31.</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="flash-attention-i">
+<h1>Flash Attention - I<a class="headerlink" href="#flash-attention-i" title="Link to this heading">#</a></h1>
+<p>This chapter assumes that you know about attention mechanism. If not please see this video, which provides a lot of info about how to model, train a GPT-2 from ground up, <a class="reference external" href="https://www.youtube.com/watch?v=l8pRSuU81PU">Andrej Karpathy video</a>.
+This chapter compromises of:</p>
+<ol class="arabic simple">
+<li><p>CuBLAS.</p></li>
+<li><p>Some Functions And Classes To Know.</p></li>
+<li><p>Finding Maximum And Sum Of An Array.</p></li>
+</ol>
+<section id="cublas">
+<h2>CuBLAS<a class="headerlink" href="#cublas" title="Link to this heading">#</a></h2>
+<p>The official documentation of <a class="reference external" href="https://docs.nvidia.com/cuda/cublas/">Cuda</a> is very detailed and well explained. I would request everyone to go through it. I believe it is self sufficent.</p>
+</section>
+<section id="some-functions-and-classes-to-know">
+<h2>Some Functions and Classes To Know<a class="headerlink" href="#some-functions-and-classes-to-know" title="Link to this heading">#</a></h2>
+<section id="cudasetdevice">
+<h3>cudaSetDevice()<a class="headerlink" href="#cudasetdevice" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">As</span> <span class="pre">of</span> <span class="pre">CUDA</span> <span class="pre">12.0,</span> <span class="pre">the</span> <span class="pre">cudaInitDevice()</span> <span class="pre">and</span> <span class="pre">cudaSetDevice()</span> <span class="pre">calls</span> <span class="pre">initialize</span> <span class="pre">the</span> <span class="pre">runtime</span> <span class="pre">and</span> <span class="pre">the</span> <span class="pre">primary</span> <span class="pre">context</span> <span class="pre">associated</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">specified</span> <span class="pre">device.</span> <span class="pre">Absent</span> <span class="pre">these</span> <span class="pre">calls,</span> <span class="pre">the</span> <span class="pre">runtime</span> <span class="pre">will</span> <span class="pre">implicitly</span> <span class="pre">use</span> <span class="pre">device</span> <span class="pre">0</span> <span class="pre">and</span> <span class="pre">self-initialize</span> <span class="pre">as</span> <span class="pre">needed</span> <span class="pre">to</span> <span class="pre">process</span> <span class="pre">other</span> <span class="pre">runtime</span> <span class="pre">API</span> <span class="pre">requests.</span> <span class="pre">One</span> <span class="pre">needs</span> <span class="pre">to</span> <span class="pre">keep</span> <span class="pre">this</span> <span class="pre">in</span> <span class="pre">mind</span> <span class="pre">when</span> <span class="pre">timing</span> <span class="pre">runtime</span> <span class="pre">function</span> <span class="pre">calls</span> <span class="pre">and</span> <span class="pre">when</span> <span class="pre">interpreting</span> <span class="pre">the</span> <span class="pre">error</span> <span class="pre">code</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">first</span> <span class="pre">call</span> <span class="pre">into</span> <span class="pre">the</span> <span class="pre">runtime.</span> <span class="pre">Before</span> <span class="pre">12.0,</span> <span class="pre">cudaSetDevice()</span> <span class="pre">would</span> <span class="pre">not</span> <span class="pre">initialize</span> <span class="pre">the</span> <span class="pre">runtime</span> <span class="pre">and</span> <span class="pre">applications</span> <span class="pre">would</span> <span class="pre">often</span> <span class="pre">use</span> <span class="pre">the</span> <span class="pre">no-op</span> <span class="pre">runtime</span> <span class="pre">call</span> <span class="pre">cudaFree(0)</span> <span class="pre">to</span> <span class="pre">isolate</span> <span class="pre">the</span> <span class="pre">runtime</span> <span class="pre">initialization</span> <span class="pre">from</span> <span class="pre">other</span> <span class="pre">api</span> <span class="pre">activity</span> <span class="pre">(both</span> <span class="pre">for</span> <span class="pre">the</span> <span class="pre">sake</span> <span class="pre">of</span> <span class="pre">timing</span> <span class="pre">and</span> <span class="pre">error</span> <span class="pre">handling).</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">host</span> <span class="pre">thread</span> <span class="pre">can</span> <span class="pre">set</span> <span class="pre">the</span> <span class="pre">device</span> <span class="pre">it</span> <span class="pre">operates</span> <span class="pre">on</span> <span class="pre">at</span> <span class="pre">any</span> <span class="pre">time</span> <span class="pre">by</span> <span class="pre">calling</span> <span class="pre">cudaSetDevice().</span> <span class="pre">Device</span> <span class="pre">memory</span> <span class="pre">allocations</span> <span class="pre">and</span> <span class="pre">kernel</span> <span class="pre">launches</span> <span class="pre">are</span> <span class="pre">made</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">currently</span> <span class="pre">set</span> <span class="pre">device;</span> <span class="pre">streams</span> <span class="pre">and</span> <span class="pre">events</span> <span class="pre">are</span> <span class="pre">created</span> <span class="pre">in</span> <span class="pre">association</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">currently</span> <span class="pre">set</span> <span class="pre">device.</span> <span class="pre">If</span> <span class="pre">no</span> <span class="pre">call</span> <span class="pre">to</span> <span class="pre">cudaSetDevice()</span> <span class="pre">is</span> <span class="pre">made,</span> <span class="pre">the</span> <span class="pre">current</span> <span class="pre">device</span> <span class="pre">is</span> <span class="pre">device</span> <span class="pre">0.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">Multiple</span> <span class="pre">host</span> <span class="pre">threads</span> <span class="pre">can</span> <span class="pre">use</span> <span class="pre">the</span> <span class="pre">device</span> <span class="pre">(by</span> <span class="pre">calling</span> <span class="pre">cudaSetDevice()</span> <span class="pre">on</span> <span class="pre">this</span> <span class="pre">device,</span> <span class="pre">when</span> <span class="pre">using</span> <span class="pre">the</span> <span class="pre">runtime</span> <span class="pre">API,</span> <span class="pre">or</span> <span class="pre">by</span> <span class="pre">making</span> <span class="pre">current</span> <span class="pre">a</span> <span class="pre">context</span> <span class="pre">associated</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">device,</span> <span class="pre">when</span> <span class="pre">using</span> <span class="pre">the</span> <span class="pre">driver</span> <span class="pre">API)</span> <span class="pre">at</span> <span class="pre">the</span> <span class="pre">same</span> <span class="pre">time.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">This</span> <span class="pre">means,</span> <span class="pre">in</span> <span class="pre">particular,</span> <span class="pre">that</span> <span class="pre">a</span> <span class="pre">host</span> <span class="pre">thread</span> <span class="pre">using</span> <span class="pre">the</span> <span class="pre">runtime</span> <span class="pre">API</span> <span class="pre">without</span> <span class="pre">explicitly</span> <span class="pre">calling</span> <span class="pre">cudaSetDevice()</span> <span class="pre">might</span> <span class="pre">be</span> <span class="pre">associated</span> <span class="pre">with</span> <span class="pre">a</span> <span class="pre">device</span> <span class="pre">other</span> <span class="pre">than</span> <span class="pre">device</span> <span class="pre">0</span> <span class="pre">if</span> <span class="pre">device</span> <span class="pre">0</span> <span class="pre">turns</span> <span class="pre">out</span> <span class="pre">to</span> <span class="pre">be</span> <span class="pre">in</span> <span class="pre">prohibited</span> <span class="pre">mode</span> <span class="pre">or</span> <span class="pre">in</span> <span class="pre">exclusive-process</span> <span class="pre">mode</span> <span class="pre">and</span> <span class="pre">used</span> <span class="pre">by</span> <span class="pre">another</span> <span class="pre">process.</span> <span class="pre">cudaSetValidDevices()</span> <span class="pre">can</span> <span class="pre">be</span> <span class="pre">used</span> <span class="pre">to</span> <span class="pre">set</span> <span class="pre">a</span> <span class="pre">device</span> <span class="pre">from</span> <span class="pre">a</span> <span class="pre">prioritized</span> <span class="pre">list</span> <span class="pre">of</span> <span class="pre">devices.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">Only</span> <span class="pre">the</span> <span class="pre">device</span> <span class="pre">on</span> <span class="pre">which</span> <span class="pre">a</span> <span class="pre">kernel</span> <span class="pre">is</span> <span class="pre">running</span> <span class="pre">will</span> <span class="pre">be</span> <span class="pre">controllable</span> <span class="pre">from</span> <span class="pre">that</span> <span class="pre">kernel.</span> <span class="pre">This</span> <span class="pre">means</span> <span class="pre">that</span> <span class="pre">device</span> <span class="pre">APIs</span> <span class="pre">such</span> <span class="pre">as</span> <span class="pre">cudaSetDevice()</span> <span class="pre">are</span> <span class="pre">not</span> <span class="pre">supported</span> <span class="pre">by</span> <span class="pre">the</span> <span class="pre">device</span> <span class="pre">runtime.</span> <span class="pre">The</span> <span class="pre">active</span> <span class="pre">device</span> <span class="pre">as</span> <span class="pre">seen</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">GPU</span> <span class="pre">(returned</span> <span class="pre">from</span> <span class="pre">cudaGetDevice())</span> <span class="pre">will</span> <span class="pre">have</span> <span class="pre">the</span> <span class="pre">same</span> <span class="pre">device</span> <span class="pre">number</span> <span class="pre">as</span> <span class="pre">seen</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">host</span> <span class="pre">system.</span> <span class="pre">The</span> <span class="pre">cudaDeviceGetAttribute()</span> <span class="pre">call</span> <span class="pre">may</span> <span class="pre">request</span> <span class="pre">information</span> <span class="pre">about</span> <span class="pre">another</span> <span class="pre">device</span> <span class="pre">as</span> <span class="pre">this</span> <span class="pre">API</span> <span class="pre">allows</span> <span class="pre">specification</span> <span class="pre">of</span> <span class="pre">a</span> <span class="pre">device</span> <span class="pre">ID</span> <span class="pre">as</span> <span class="pre">a</span> <span class="pre">parameter</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">call.</span> <span class="pre">Note</span> <span class="pre">that</span> <span class="pre">the</span> <span class="pre">catch-all</span> <span class="pre">cudaGetDeviceProperties()</span> <span class="pre">API</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">offered</span> <span class="pre">by</span> <span class="pre">the</span> <span class="pre">device</span> <span class="pre">runtime</span> <span class="pre">-</span> <span class="pre">properties</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">queried</span> <span class="pre">individually</span></code></p>
+<p>The above informations are taken from here, <a class="reference external" href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/">cuda-c-programming-guide</a>.</p>
+<p>So initially we associate a device to a host. Meaning when we launch a kernel from our host, the operations will happend on the device which we have set using <em>cudaSetDevice()</em></p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">cudaCheck</span><span class="p">(</span><span class="n">cudaSetDevice</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
+</pre></div>
+</div>
+<p>Since I have only one gpu, I set use the first GPU indexed by 0.</p>
+</section>
+<section id="cudagetdeviceproperties">
+<h3>cudaGetDeviceProperties()<a class="headerlink" href="#cudagetdeviceproperties" title="Link to this heading">#</a></h3>
+<p>This is to get the properties of a particular device. First parameter is class of <em>cudaDeviceProp</em>, the second is the device ID.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">cudaDeviceProp</span><span class="w"> </span><span class="n">deviceProp</span><span class="p">;</span>
+<span class="n">cudaGetDeviceProperties</span><span class="p">(</span><span class="o">&amp;</span><span class="n">deviceProp</span><span class="p">,</span><span class="w"> </span><span class="n">deviceIdx</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>After calling <em>cudaGetDeviceProperties()</em>, the device properties will be stored in <em>deviceProp</em>.</p>
+</section>
+<section id="setting-up-cublas">
+<h3>Setting up cuBLAS<a class="headerlink" href="#setting-up-cublas" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">The</span> <span class="pre">application</span> <span class="pre">must</span> <span class="pre">initialize</span> <span class="pre">a</span> <span class="pre">handle</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">cuBLAS</span> <span class="pre">library</span> <span class="pre">context</span> <span class="pre">by</span> <span class="pre">calling</span> <span class="pre">the</span> <span class="pre">cublasCreate()</span> <span class="pre">function.</span> <span class="pre">Then,</span> <span class="pre">the</span> <span class="pre">handle</span> <span class="pre">is</span> <span class="pre">explicitly</span> <span class="pre">passed</span> <span class="pre">to</span> <span class="pre">every</span> <span class="pre">subsequent</span> <span class="pre">library</span> <span class="pre">function</span> <span class="pre">call.</span> <span class="pre">Once</span> <span class="pre">the</span> <span class="pre">application</span> <span class="pre">finishes</span> <span class="pre">using</span> <span class="pre">the</span> <span class="pre">library,</span> <span class="pre">it</span> <span class="pre">must</span> <span class="pre">call</span> <span class="pre">the</span> <span class="pre">function</span> <span class="pre">cublasDestroy()</span> <span class="pre">to</span> <span class="pre">release</span> <span class="pre">the</span> <span class="pre">resources</span> <span class="pre">associated</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">cuBLAS</span> <span class="pre">library</span> <span class="pre">context.</span></code><br />
+The above information are taken from here, <a class="reference external" href="https://docs.nvidia.com/cuda/cublas/">cuBLAS</a>.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">cublasHandle_t</span><span class="w"> </span><span class="n">cublas_handle</span><span class="p">;</span>
+<span class="n">cublasCreate</span><span class="p">(</span><span class="o">&amp;</span><span class="n">cublas_handle</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="cublas-error">
+<h3>CuBLAS Error<a class="headerlink" href="#cublas-error" title="Link to this heading">#</a></h3>
+<p>Cuda functions return <em>​cudaError_t</em>, which defines the CUDA error types.
+CuBLAS functions return <em>cublasStatus_t</em>, which defines the cuBLAS error types.</p>
+<p>So to if a check Cublas error has occured, we use the follwoing code:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// cuBLAS error checking</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">cublasCheck</span><span class="p">(</span><span class="n">cublasStatus_t</span><span class="w"> </span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">file</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">line</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">status</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">CUBLAS_STATUS_SUCCESS</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;[cuBLAS ERROR]: %d %s %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="n">file</span><span class="p">,</span><span class="w"> </span><span class="n">line</span><span class="p">);</span>
+<span class="w">        </span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cp">#define cublasCheck(status) { cublasCheck((status), __FILE__, __LINE__); }</span>
+</pre></div>
+</div>
+</section>
+<section id="cublassgemmstridedbatched-in-cuda">
+<h3><code class="docutils literal notranslate"><span class="pre">cublasSgemmStridedBatched</span></code> in CUDA<a class="headerlink" href="#cublassgemmstridedbatched-in-cuda" title="Link to this heading">#</a></h3>
+<p>More information can be found here <a class="reference external" href="https://docs.nvidia.com/cuda/cublas/#cublas-t-gemmstridedbatched">cublas-t-gemmstridedbatched</a> and <a class="reference external" href="https://developer.nvidia.com/blog/cublas-strided-batched-matrix-multiply/">Nvidia blog</a>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">cublasSgemmStridedBatched</span></code> function in CUDA is part of the cuBLAS library. It performs <strong>batched</strong> matrix-matrix multiplication. Mathematically, it computes:</p>
+<div class="math notranslate nohighlight">
+\[
+C[i] = \alpha \cdot (A[i]^T \times B[i]) + \beta \cdot C[i], \quad \text{for } i = 0, \dots, \text{batchCount x t} - 1
+\]</div>
+<div class="math notranslate nohighlight">
+\[
+A[i]\text{ is a matrix inside one batch. If } A \text{ has dim Batch x m x k, then } A[i] \text{ has dim m x K.} 
+\]</div>
+<section id="function-prototype">
+<h4>Function Prototype<a class="headerlink" href="#function-prototype" title="Link to this heading">#</a></h4>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">cublasStatus_t</span><span class="w"> </span><span class="nf">cublasSgemmStridedBatched</span><span class="p">(</span><span class="n">cublasHandle_t</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span>
+<span class="w">                                  </span><span class="n">cublasOperation_t</span><span class="w"> </span><span class="n">transa</span><span class="p">,</span>
+<span class="w">                                  </span><span class="n">cublasOperation_t</span><span class="w"> </span><span class="n">transb</span><span class="p">,</span>
+<span class="w">                                  </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="p">,</span>
+<span class="w">                                  </span><span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w">           </span><span class="o">*</span><span class="n">alpha</span><span class="p">,</span>
+<span class="w">                                  </span><span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w">           </span><span class="o">*</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">lda</span><span class="p">,</span>
+<span class="w">                                  </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">int</span><span class="w">          </span><span class="n">strideA</span><span class="p">,</span>
+<span class="w">                                  </span><span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w">           </span><span class="o">*</span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">ldb</span><span class="p">,</span>
+<span class="w">                                  </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">int</span><span class="w">          </span><span class="n">strideB</span><span class="p">,</span>
+<span class="w">                                  </span><span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w">           </span><span class="o">*</span><span class="n">beta</span><span class="p">,</span>
+<span class="w">                                  </span><span class="kt">float</span><span class="w">                 </span><span class="o">*</span><span class="n">C</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">ldc</span><span class="p">,</span>
+<span class="w">                                  </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">int</span><span class="w">          </span><span class="n">strideC</span><span class="p">,</span>
+<span class="w">                                  </span><span class="kt">int</span><span class="w"> </span><span class="n">batchCount</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Parameters</p>
+<ul class="simple">
+<li><p><strong>handle</strong>: handle to the cuBLAS library context. Which is defined in the previous section.</p></li>
+<li><p><strong>transa</strong>: Specifies whether matrix A is transposed or not.</p>
+<ul>
+<li><p>CUBLAS_OP_N:
+No transpose.<br />
+The matrix A[i] is used as-is.</p></li>
+<li><p>CUBLAS_OP_T:
+Transpose.<br />
+The matrix A[i] is transposed.</p></li>
+<li><p>CUBLAS_OP_C:
+Conjugate transpose.
+The matrix A[i] is conjugate-transposed.</p></li>
+</ul>
+</li>
+<li><p><strong>transb</strong>: Specifies whether matrix B is transposed or not.</p></li>
+<li><p><strong>m</strong>: The number of rows of matrix C[i] and matrix A[i].</p></li>
+<li><p><strong>n</strong>: The number of columns of matrix C[i] and matrix B[i].</p></li>
+<li><p><strong>k</strong>: The number of columns of matrix A[i] and rows of matrix B[i].</p></li>
+<li><p><strong>alpha</strong>: Scalar multiplier for the product of matrices A[i] and B[i].</p></li>
+<li><p><strong>A</strong>: Pointer to the first matrix A in device memory.</p></li>
+<li><p><strong>lda</strong>: Leading dimension of matrix A. if A has dimension batch_size x m x k. The lda = k.</p></li>
+<li><p><strong>strideA</strong>: alue of type long long int that gives the offset in number of elements between A[i] and A[i+1].</p></li>
+<li><p><strong>B</strong>: Pointer to the first matrix B in device memory.</p></li>
+<li><p><strong>ldb</strong>: Leading dimension of matrix B. If B has dimension batch_size x k x n. The lda = n.</p></li>
+<li><p><strong>strideB</strong>: Value of type long long int that gives the offset in number of elements between B[i] and B[i+1].</p></li>
+<li><p><strong>beta</strong>: Scalar multiplier for matrix C. If beta == 0, C does not have to be a valid input.</p></li>
+<li><p><strong>C</strong>: pointer to the C matrix corresponding to the first instance of the batch, with dimensions ldc x n with ldc&gt;=max(1,m). Matrices C[i] should not overlap; otherwise, undefined behavior is expected.</p></li>
+<li><p><strong>ldc</strong>: leading dimension of two-dimensional array used to store each matrix C[i].</p></li>
+<li><p><strong>strideC</strong>: Value of type long long int that gives the offset in number of elements between C[i] and C[i+1].</p></li>
+<li><p><strong>batchCount</strong>: Number of batches.</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="finding-maximum-and-sum-of-an-array">
+<h2>Finding Maximum And Sum Of An Array.<a class="headerlink" href="#finding-maximum-and-sum-of-an-array" title="Link to this heading">#</a></h2>
+<p>Given an  Array A of size 1024, write a program to calculate the maximum. Based on what we know lets write a code:
+We will write a kernel to find the max. Initiall max_value will be -inf, each thread will correspond to a value in Array A and compare its value with the max_value simultaneously, if max_value is less the value represented by the thread will get stored in the max_value. Logically this should work, becuase as soon as the thread representing the max value is compared with the max_value its value will get stored.<br />
+The below code demonstrates this idea</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;limits.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cuda_runtime.h&gt;</span>
+
+<span class="n">__global__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">findmax</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">C</span><span class="p">){</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">blockDim</span><span class="p">.</span><span class="n">x</span><span class="o">*</span><span class="n">blockIdx</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">//C has INT_MIN value. </span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="o">*</span><span class="n">C</span><span class="p">)</span>
+<span class="w">        </span><span class="o">*</span><span class="n">C</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A</span><span class="p">[</span><span class="n">idx</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">(){</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1024</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">h_A</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">h_A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">h_C</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">d_C</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="o">*</span><span class="n">n</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_C</span><span class="p">,</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="o">*</span><span class="mi">1</span><span class="p">);</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="n">cudaMemset</span><span class="p">(</span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="n">INT_MIN</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">));</span>
+<span class="w">    </span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="n">h_A</span><span class="p">,</span><span class="n">n</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">),</span><span class="n">cudaMemcpyHostToDevice</span><span class="p">);</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="n">findmax</span><span class="o">&lt;&lt;&lt;</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="n">d_C</span><span class="p">);</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">h_C</span><span class="p">,</span><span class="n">d_C</span><span class="p">,</span><span class="mi">1</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">),</span><span class="n">cudaMemcpyDeviceToHost</span><span class="p">);</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">&quot;Maximum value: &quot;</span><span class="o">&lt;&lt;</span><span class="n">h_C</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The above code will give incorrect results. C will have junk value stored in it. Since all the threads run parallely, if two threads simultaneously try to write to C, then the value stored in it will be junk. We don’t have any mechanism in place here to make sure that thread locking(only one thread writes into C at a time) is happening.</p>
+<p>How to we find the max then?
+Lets start by finding the max within a wrap. Recall that whenever a instruction is executed it is wrap wide, that is 32 threads will have the same instruction. To find the maximum within a wrap we will make use of <strong>__shfl_down_sync()</strong> function. It is a warp-level primitive. It is warp shuffle function used for intra-warp communication, allowing threads within a warp to share data efficiently without resorting to global memory.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">T</span><span class="w"> </span><span class="nf">__shfl_down_sync</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="n">mask</span><span class="p">,</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="n">var</span><span class="p">,</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">delta</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">width</span><span class="o">=</span><span class="n">warpSize</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>T can be int, unsigned int, long, unsigned long, long long, unsigned long long, float or double.</p>
+<ul class="simple">
+<li><p>unsigned mask: specifies which threads inside a wrap are participating.</p>
+<ul>
+<li><p>If mask = 0xffffffff: then all the threads communicate.</p></li>
+<li><p>If mask = 0x0000000F: Only the first 4 threads (lanes 0 to 3) communicate.</p></li>
+<li><p>If mask = 0x0000FFFF: Only the first 16 threads (lanes 0 to 15) communicate.</p></li>
+</ul>
+</li>
+<li><p>T var: The value inside each thread which needs to be communicated.</p></li>
+<li><p>unsigned int delta: The number of threads to shift down.</p>
+<ul>
+<li><p>For example: if delta = 16. Then thread 0(also called lane 0) communicates with thread 16( 16 + 0), 1(also called lane 1) with 17(16 + 1), 2(also called lane 2) with 18(16 + 2), 3(also called lane 3) with 19(16 + 3)… 15 with 32(16 + 15).</p></li>
+</ul>
+</li>
+<li><p>width: Optional. Specifies the width of the shuffle (default is warpSize).</p></li>
+</ul>
+<p>More about this can be found here,<a class="reference external" href="https://developer.nvidia.com/blog/using-cuda-warp-level-primitives/">using-cuda-warp-level-primitives</a>.</p>
+<section id="lets-write-a-program-to-find-the-max-within-an-array-of-size-32-wrap-size">
+<h3>Lets write a program to find the max within an array of size = 32(wrap size).<a class="headerlink" href="#lets-write-a-program-to-find-the-max-within-an-array-of-size-32-wrap-size" title="Link to this heading">#</a></h3>
+<p>The code is here, the explanation is given after this.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;limits.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cuda_runtime.h&gt;</span>
+
+<span class="n">__global__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">findmax</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">C</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+<span class="w">    </span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">idx</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">32</span><span class="p">)</span>
+<span class="w">        </span><span class="n">max_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A</span><span class="p">[</span><span class="n">idx</span><span class="p">];</span>
+
+<span class="w">    </span><span class="c1">// Perform warp-level reduction using shuffle instructions</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">        </span><span class="n">max_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">max_val</span><span class="p">,</span><span class="w"> </span><span class="n">__shfl_down_sync</span><span class="p">(</span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="n">max_val</span><span class="p">,</span><span class="w"> </span><span class="n">offset</span><span class="p">));</span>
+
+<span class="w">    </span><span class="c1">// Store the result from thread 0</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">idx</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="o">*</span><span class="n">C</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max_val</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">h_A</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">h_A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span><span class="w"> </span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">h_C</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">d_C</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">));</span>
+
+<span class="w">    </span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="n">h_A</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">cudaMemcpyHostToDevice</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cudaMemset</span><span class="p">(</span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">));</span>
+
+<span class="w">    </span><span class="n">findmax</span><span class="o">&lt;&lt;&lt;</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="n">d_C</span><span class="p">);</span><span class="w"> </span><span class="c1">// Launch kernel with 32 threads (1 block, 32 threads)</span>
+
+<span class="w">    </span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">h_C</span><span class="p">,</span><span class="w"> </span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">),</span><span class="w"> </span><span class="n">cudaMemcpyDeviceToHost</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Maximum value: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">h_C</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">   </span>
+<span class="w">    </span><span class="n">cudaFree</span><span class="p">(</span><span class="n">d_A</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cudaFree</span><span class="p">(</span><span class="n">d_C</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Explanation: This is the main part of the code.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">idx</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">32</span><span class="p">)</span>
+<span class="w">        </span><span class="n">max_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A</span><span class="p">[</span><span class="n">idx</span><span class="p">];</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">        </span><span class="n">max_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">max_val</span><span class="p">,</span><span class="w"> </span><span class="n">__shfl_down_sync</span><span class="p">(</span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="n">max_val</span><span class="p">,</span><span class="w"> </span><span class="n">offset</span><span class="p">));</span>
+</pre></div>
+</div>
+<p>initially max_val in each thread will have A[idx].</p>
+<p>During the first iteration, that is when offeset = 16, thread 0 communicates with thread 16( 16 + 0) and updates its max_val, 1 with 17(16 + 1) and updates its max_val, 2 with 18(16 + 2) and updates its max_val, 3 with 19(16 + 3) and updates its max_val… 15 with 32(16 + 15) and updates its max_val. After the first iteration,any of the threads from 0 to 15 will have the maximum of the array.</p>
+<p>During the second iteration, that is when offeset = 8, thread 0 communicates with thread 8( 8 + 0) and updates its max_val, 1 with 9(8 + 1) and updates its max_val, 2 with 10(8 + 2) and updates its max_val, 3 with 11(8 + 3) and updates its max_val… 7 with 15(8 + 7) and updates its max_val. After the second iteration,any of the threads from 0 to 7 will have the maximum of the array.</p>
+<p>In the last iteration, when offset = 2. The thread 0 communicates with thread 1 and updates its max_val.<br />
+So the maximum val of the array will be stored in the Thread 0’s max_val.</p>
+</section>
+<section id="lets-write-a-program-to-find-the-max-within-an-array-whose-size-is-a-power-of-2-and-greater-31">
+<h3>Lets write a program to find the max within an array whose size is a power of 2 and greater 31.<a class="headerlink" href="#lets-write-a-program-to-find-the-max-within-an-array-whose-size-is-a-power-of-2-and-greater-31" title="Link to this heading">#</a></h3>
+<p>laneId = threadIdx.x % 32;     // to identify the threadId within a wrap.
+warpId = threadIdx.x / 32;     // to identify the wrap to which a thread belongs to.</p>
+<p>Here we will make use of shared memory.</p>
+<ul class="simple">
+<li><p>IThis is what we do:</p>
+<ul>
+<li><p>The number of blocks is 1. The threads per block = threads_per_block. Array size = asize. Number of partitions = asize/threads_per_block.</p></li>
+<li><p>The threads in partition 0, compares its values with threads in other partitions. For example lets say there are 4 partitions, threads per partition = 64. Array size =  256.</p>
+<ul>
+<li><p>Thread 0 of partition 0 will compare its value with thread 0 of partition 1, thread 0 of partition 2, thread 0 of partition 3.</p></li>
+<li><p>Thread 1 of partition 0 will compare its value with thread 1 of partition 1, thread 1 of partition 2, thread 1 of partition 3.</p></li>
+<li><p>Thread 63 of partition 0 will compare its value with thread 63 of partition 1, thread 63 of partition 2, thread 63 of partition 3.</p></li>
+</ul>
+</li>
+<li><p>Now the maximum will be inside the threads in partition 0.</p></li>
+<li><p>Now we perform within-warp reductions which we discussed above. After this thread 0 within each wrap will have the maximum value, which we will store it in the shared memory. Thread 0 of a wrap is identified by warpId.</p></li>
+<li><p>Now the shared memory will contain the maximum. All we have to do is iterate through thisshared memory to find the maximum.</p></li>
+</ul>
+</li>
+<li><p>How do we decide the size of shared memory?</p>
+<ul>
+<li><p>For each wrap inside the partition zero, we will have a <strong>1 * sizeof(type)</strong> bytes of shared memory. Because remember we have to store the result of the maximum of each wrap, this is where shared memory comes into the picture.</p></li>
+</ul>
+</li>
+</ul>
+<p><em>I have left it to you to figure out why only the powers of 2, greater than 31 can be used as a array size</em></p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;limits.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cuda_runtime.h&gt;</span>
+
+
+<span class="n">__global__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">findmax</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">C</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">asize</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// special reduction operations warpReduceMax/warpReduceSum are used for intra-warp reductions</span>
+<span class="w">    </span><span class="c1">// shared memory is used for inter-warp reduction</span>
+<span class="w">    </span><span class="k">extern</span><span class="w"> </span><span class="n">__shared__</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">maxvals</span><span class="p">[];</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">tid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">warpId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span><span class="w"> </span><span class="c1">// warp index within a block</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">laneId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span><span class="w"> </span><span class="c1">// thread index within a warp</span>
+
+<span class="w">     </span><span class="c1">// the number of warps per block. recall that blockDim.x is block_size</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">warpsPerBlock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">blockDim</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="c1">// first, thread coarsening by directly accessing global memory in series</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">max_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MIN</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tid</span><span class="p">;</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">asize</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">blockDim</span><span class="p">.</span><span class="n">x</span><span class="p">)</span>
+<span class="w">        </span><span class="n">max_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">max_val</span><span class="p">,</span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="n">__syncthreads</span><span class="p">();</span>
+<span class="w">    </span><span class="c1">// now within-warp reductions for maxval</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">        </span><span class="n">max_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">max_val</span><span class="p">,</span><span class="w"> </span><span class="n">__shfl_down_sync</span><span class="p">(</span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="n">max_val</span><span class="p">,</span><span class="w"> </span><span class="n">offset</span><span class="p">));</span>
+
+<span class="w">    </span><span class="c1">// the 0th thread of each warp writes the maxval of that warp to shared memory</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">laneId</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">maxvals</span><span class="p">[</span><span class="n">warpId</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max_val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">__syncthreads</span><span class="p">();</span>
+
+<span class="w">    </span><span class="c1">// now the 0th thread reduces the maxvals in shared memory, i.e. across warps</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">tid</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">maxvals</span><span class="p">[</span><span class="n">tid</span><span class="p">];</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">warpsPerBlock</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="n">maxvals</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="c1">// store the final max in the first position</span>
+<span class="w">        </span><span class="o">*</span><span class="n">C</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">__syncthreads</span><span class="p">();</span>
+<span class="w">    </span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1024</span><span class="p">;</span><span class="w"> </span><span class="c1">// always a power of 2 and greater than 31.</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">threads_per_block</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">64</span><span class="p">;</span><span class="w"> </span><span class="c1">// always a power of 2 and greater than 31.</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">h_A</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">h_A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span><span class="w"> </span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">h_C</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">d_C</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">));</span>
+
+<span class="w">    </span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="n">h_A</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">cudaMemcpyHostToDevice</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cudaMemset</span><span class="p">(</span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">));</span>
+
+
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">space</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">threads_per_block</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">31</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">32</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">findmax</span><span class="o">&lt;&lt;&lt;</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">threads_per_block</span><span class="p">,</span><span class="w"> </span><span class="n">space</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="n">d_C</span><span class="p">,</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="c1">// Launch kernel with 32 threads (1 block, 32 threads)</span>
+
+<span class="w">    </span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">h_C</span><span class="p">,</span><span class="w"> </span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">),</span><span class="w"> </span><span class="n">cudaMemcpyDeviceToHost</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Maximum value: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">h_C</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">   </span>
+<span class="w">    </span><span class="n">cudaFree</span><span class="p">(</span><span class="n">d_A</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cudaFree</span><span class="p">(</span><span class="n">d_C</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="finding-the-row-maximum-of-a-n-c-dimesnion-array-n-is-a-power-of-2-and-greater-than-31">
+<h3>Finding the row maximum of a (N,C) dimesnion array. N is a power of 2 and greater than 31.<a class="headerlink" href="#finding-the-row-maximum-of-a-n-c-dimesnion-array-n-is-a-power-of-2-and-greater-than-31" title="Link to this heading">#</a></h3>
+<p>Most of the code from above remains the same except the below changes.
+- Input is a N*M dim array. N = rows, M = columns.
+- We will represent the final result by max_result instead of C. max_result wil be N dimesnional array.
+- Instead of having one block we will have N blocks, to find max in each of the N rows.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;limits.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cuda_runtime.h&gt;</span>
+
+<span class="n">__global__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">findmax</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">max_result</span><span class="p">,</span><span class="kt">int</span><span class="w"> </span><span class="n">asize</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// special reduction operations warpReduceMax/warpReduceSum are used for intra-warp reductions</span>
+<span class="w">    </span><span class="c1">// shared memory is used for inter-warp reduction</span>
+<span class="w">    </span><span class="k">extern</span><span class="w"> </span><span class="n">__shared__</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">maxvals</span><span class="p">[];</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">tid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">warpId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span><span class="w"> </span><span class="c1">// warp index within a block</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">laneId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span><span class="w"> </span><span class="c1">// thread index within a warp</span>
+
+<span class="w">     </span><span class="c1">// the number of warps per block. recall that blockDim.x is block_size</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">warpsPerBlock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">blockDim</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="c1">// first, thread coarsening by directly accessing global memory in series</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">max_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MIN</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">inp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">asize</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">blockIdx</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tid</span><span class="p">;</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">asize</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">blockDim</span><span class="p">.</span><span class="n">x</span><span class="p">)</span>
+<span class="w">        </span><span class="n">max_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">max_val</span><span class="p">,</span><span class="n">inp</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="n">__syncthreads</span><span class="p">();</span>
+<span class="w">    </span><span class="c1">// now within-warp reductions for maxval</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">        </span><span class="n">max_val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">max_val</span><span class="p">,</span><span class="w"> </span><span class="n">__shfl_down_sync</span><span class="p">(</span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="n">max_val</span><span class="p">,</span><span class="w"> </span><span class="n">offset</span><span class="p">));</span>
+
+<span class="w">    </span><span class="c1">// the 0th thread of each warp writes the maxval of that warp to shared memory</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">laneId</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">maxvals</span><span class="p">[</span><span class="n">warpId</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max_val</span><span class="p">;</span>
+<span class="w">    </span><span class="n">__syncthreads</span><span class="p">();</span>
+
+<span class="w">    </span><span class="c1">// now the 0th thread reduces the maxvals in shared memory, i.e. across warps</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">tid</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">maxvals</span><span class="p">[</span><span class="n">tid</span><span class="p">];</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">warpsPerBlock</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="n">maxvals</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="c1">// store the final max in the first position</span>
+<span class="w">        </span><span class="n">max_result</span><span class="p">[</span><span class="n">blockIdx</span><span class="p">.</span><span class="n">x</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">__syncthreads</span><span class="p">();</span>
+<span class="w">    </span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">threads_per_block</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">64</span><span class="p">;</span><span class="w"> </span><span class="c1">// always a power of 2 and greater than 31.</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">h_A</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="n">m</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">++</span><span class="p">)</span>
+<span class="w">            </span><span class="n">h_A</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">m</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="o">*</span><span class="n">m</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="p">;</span><span class="w"> </span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">h_C</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">d_C</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="n">h_A</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">cudaMemcpyHostToDevice</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cudaMemset</span><span class="p">(</span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
+
+
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">space</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">threads_per_block</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">31</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">32</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">findmax</span><span class="o">&lt;&lt;&lt;</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">threads_per_block</span><span class="p">,</span><span class="w"> </span><span class="n">space</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="n">d_C</span><span class="p">,</span><span class="n">m</span><span class="p">);</span><span class="w"> </span><span class="c1">// Launch kernel with 32 threads (1 block, 32 threads)</span>
+
+<span class="w">    </span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">h_C</span><span class="p">,</span><span class="w"> </span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">cudaMemcpyDeviceToHost</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">&quot;Row Number : &quot;</span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="s">&quot;. Maximum value: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">   </span>
+<span class="w">    </span><span class="n">cudaFree</span><span class="p">(</span><span class="n">d_A</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cudaFree</span><span class="p">(</span><span class="n">d_C</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output of the code:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">0.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">1023</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">1.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">2047</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">2.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">3071</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">3.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">4095</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">4.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">5119</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">5.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">6143</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">6.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">7167</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">7.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">8191</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">8.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">9215</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">9.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">10239</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">10.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">11263</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">11.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">12287</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">12.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">13311</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">13.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">14335</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">14.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">15359</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">15.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">16383</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">16.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">17407</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">17.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">18431</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">18.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">19455</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">19.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">20479</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">20.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">21503</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">21.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">22527</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">22.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">23551</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">23.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">24575</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">24.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">25599</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">25.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">26623</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">26.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">27647</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">27.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">28671</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">28.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">29695</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">29.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">30719</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">30.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">31743</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">31.</span> <span class="n">Maximum</span> <span class="n">value</span><span class="p">:</span> <span class="mi">32767</span>
+</pre></div>
+</div>
+</section>
+<section id="finding-the-row-sum-of-a-n-c-dimesnion-array-n-is-a-power-of-2-and-greater-than-31">
+<h3>Finding the row sum of a (N,C) dimesnion array. N is a power of 2 and greater than 31.<a class="headerlink" href="#finding-the-row-sum-of-a-n-c-dimesnion-array-n-is-a-power-of-2-and-greater-than-31" title="Link to this heading">#</a></h3>
+<p>The code is similar to the above, but wherever max operation is present we do addition instead.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;limits.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cuda_runtime.h&gt;</span>
+
+
+<span class="n">__global__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">findmax</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">results</span><span class="p">,</span><span class="kt">int</span><span class="w"> </span><span class="n">asize</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// special reduction operations warpReduceMax/warpReduceSum are used for intra-warp reductions</span>
+<span class="w">    </span><span class="c1">// shared memory is used for inter-warp reduction</span>
+<span class="w">    </span><span class="k">extern</span><span class="w"> </span><span class="n">__shared__</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">row_sums</span><span class="p">[];</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">tid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">warpId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span><span class="w"> </span><span class="c1">// warp index within a block</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">laneId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">threadIdx</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span><span class="w"> </span><span class="c1">// thread index within a warp</span>
+
+<span class="w">     </span><span class="c1">// the number of warps per block. recall that blockDim.x is block_size</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">warpsPerBlock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">blockDim</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="c1">// first, thread coarsening by directly accessing global memory in series</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">row_sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">inp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">asize</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">blockIdx</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tid</span><span class="p">;</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">asize</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">blockDim</span><span class="p">.</span><span class="n">x</span><span class="p">)</span>
+<span class="w">        </span><span class="n">row_sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">inp</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="n">__syncthreads</span><span class="p">();</span>
+<span class="w">    </span><span class="c1">// now within-warp reductions for maxval</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">        </span><span class="n">row_sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">__shfl_down_sync</span><span class="p">(</span><span class="mh">0xFFFFFFFF</span><span class="p">,</span><span class="w"> </span><span class="n">row_sum</span><span class="p">,</span><span class="w"> </span><span class="n">offset</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// the 0th thread of each warp writes the maxval of that warp to shared memory</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">laneId</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">row_sums</span><span class="p">[</span><span class="n">warpId</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row_sum</span><span class="p">;</span>
+<span class="w">    </span><span class="n">__syncthreads</span><span class="p">();</span>
+
+<span class="w">    </span><span class="c1">// now the 0th thread reduces the maxvals in shared memory, i.e. across warps</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">tid</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row_sums</span><span class="p">[</span><span class="n">tid</span><span class="p">];</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">warpsPerBlock</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">val</span><span class="w"> </span><span class="o">+=</span><span class="w">  </span><span class="n">row_sums</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="c1">// store the final max in the first position</span>
+<span class="w">        </span><span class="n">results</span><span class="p">[</span><span class="n">blockIdx</span><span class="p">.</span><span class="n">x</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">__syncthreads</span><span class="p">();</span>
+<span class="w">    </span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">threads_per_block</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">64</span><span class="p">;</span><span class="w"> </span><span class="c1">// always a power of 2 and greater than 31.</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">h_A</span><span class="p">[</span><span class="n">n</span><span class="o">*</span><span class="n">m</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">++</span><span class="p">)</span>
+<span class="w">            </span><span class="n">h_A</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">m</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">h_C</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">d_C</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cudaMalloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="n">h_A</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">cudaMemcpyHostToDevice</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cudaMemset</span><span class="p">(</span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
+
+
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">space</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">threads_per_block</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">31</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">32</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">findmax</span><span class="o">&lt;&lt;&lt;</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">threads_per_block</span><span class="p">,</span><span class="w"> </span><span class="n">space</span><span class="o">&gt;&gt;&gt;</span><span class="p">(</span><span class="n">d_A</span><span class="p">,</span><span class="w"> </span><span class="n">d_C</span><span class="p">,</span><span class="n">m</span><span class="p">);</span><span class="w"> </span><span class="c1">// Launch kernel with 32 threads (1 block, 32 threads)</span>
+
+<span class="w">    </span><span class="n">cudaMemcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">h_C</span><span class="p">,</span><span class="w"> </span><span class="n">d_C</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">cudaMemcpyDeviceToHost</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">&quot;Row Number : &quot;</span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="s">&quot;. Row sum: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">h_C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">   </span>
+<span class="w">    </span><span class="n">cudaFree</span><span class="p">(</span><span class="n">d_A</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cudaFree</span><span class="p">(</span><span class="n">d_C</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Output</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">0.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">523776</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">1.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">524800</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">2.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">525824</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">3.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">526848</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">4.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">527872</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">5.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">528896</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">6.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">529920</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">7.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">530944</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">8.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">531968</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">9.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">532992</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">10.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">534016</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">11.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">535040</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">12.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">536064</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">13.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">537088</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">14.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">538112</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">15.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">539136</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">16.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">540160</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">17.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">541184</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">18.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">542208</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">19.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">543232</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">20.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">544256</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">21.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">545280</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">22.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">546304</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">23.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">547328</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">24.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">548352</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">25.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">549376</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">26.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">550400</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">27.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">551424</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">28.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">552448</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">29.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">553472</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">30.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">554496</span>
+<span class="n">Row</span> <span class="n">Number</span> <span class="p">:</span> <span class="mf">31.</span> <span class="n">Row</span> <span class="nb">sum</span><span class="p">:</span> <span class="mi">555520</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./."
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="02-instruction-dispatch-and-memory.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Instruction Dispatch and Memory</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="04-flash-attention-II.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Flash Attention - II</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cublas">CuBLAS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#some-functions-and-classes-to-know">Some Functions and Classes To Know</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cudasetdevice">cudaSetDevice()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cudagetdeviceproperties">cudaGetDeviceProperties()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-up-cublas">Setting up cuBLAS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cublas-error">CuBLAS Error</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cublassgemmstridedbatched-in-cuda"><code class="docutils literal notranslate"><span class="pre">cublasSgemmStridedBatched</span></code> in CUDA</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#function-prototype">Function Prototype</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#finding-maximum-and-sum-of-an-array">Finding Maximum And Sum Of An Array.</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lets-write-a-program-to-find-the-max-within-an-array-of-size-32-wrap-size">Lets write a program to find the max within an array of size = 32(wrap size).</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lets-write-a-program-to-find-the-max-within-an-array-whose-size-is-a-power-of-2-and-greater-31">Lets write a program to find the max within an array whose size is a power of 2 and greater 31.</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#finding-the-row-maximum-of-a-n-c-dimesnion-array-n-is-a-power-of-2-and-greater-than-31">Finding the row maximum of a (N,C) dimesnion array. N is a power of 2 and greater than 31.</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#finding-the-row-sum-of-a-n-c-dimesnion-array-n-is-a-power-of-2-and-greater-than-31">Finding the row sum of a (N,C) dimesnion array. N is a power of 2 and greater than 31.</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Yoghes and The Internet
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
