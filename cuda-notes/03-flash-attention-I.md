@@ -8,7 +8,7 @@ This chapter compromises of:
 ## CuBLAS
 The official documentation of [Cuda](https://docs.nvidia.com/cuda/cublas/) is very detailed and well explained. I would request everyone to go through it. I believe it is self sufficent. 
 
-## Some Functions and Classes To Know
+## Some Functions and Classes To Knoww
 
 ### cudaSetDevice()
 
