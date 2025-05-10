@@ -100,6 +100,11 @@ cublasStatus_t cublasSgemmStridedBatched(cublasHandle_t handle,
                                   long long int          strideC,
                                   int batchCount);
 ```
+Performs:
+```
+C[i] = alpha * op(A[i]) * op(B[i]) + beta * C[i]
+```
+for i = 0 to batchCount - 1, where op(X) is either the matrix X, its transpose, or its conjugate transpose, depending on the specified operation.
 
 Parameters
 - **handle**: handle to the cuBLAS library context. Which is defined in the previous section.
